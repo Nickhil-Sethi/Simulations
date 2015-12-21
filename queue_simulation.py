@@ -112,5 +112,4 @@ def queue_simulation(simulation_time = 40, service_start = 10, arrival_probabili
 
 	return q
 
-a = element(5)
 queue_simulation(failure_probability = .5)
