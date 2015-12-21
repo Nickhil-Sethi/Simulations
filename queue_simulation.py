@@ -22,7 +22,7 @@ class queue(object):
 	def pop(self):
 		if self.len==0:
 			print 'queue empty'
-			return
+			return -1
 		elif self.len == 1:
 			r  = self.first
 			self.first = 'null'
@@ -71,6 +71,7 @@ class queue(object):
 class server(object):
 	def __init__(self, failure_probability = .01):
 		self.failure_probability = failure_probability
+		self.active = True 
 	def service(self, customer):
 		if(not isinstance(customer,element)):
 			print customer, type(customer)
@@ -79,35 +80,44 @@ class server(object):
 			print customer.value, 'serviced'
 		return
 
-def queue_simulation(simulation_time = 40, service_start = 10, arrival_probability = .3, failure_probability = .01):
+def find_server(server_dict):
+	#returns first server which is active
+	if not isinstance(server_dict[0], server):
+		raise TypeError('Not a server!')
+	else:
+		for server in server_dict:
+			if server.active == True:
+				return server
+
+def queue_simulation(simulation_time = 40, service_start = 10, num_servers = 1, arrival_probability = .3, failure_probability = .01):
 	time = 0
 
 	q = queue()
-	s = server(failure_probability)
-	print 'failure probability = ', s.failure_probability, '\n'
+	server_dict = {}
+	for i in range(num_servers):
+		server_dict[i] = server(failure_probability)
+	print 'failure probability = ', server_dict[0].failure_probability, '\n'
 
 	while(time <= simulation_time):
-		#loading queue before service starts
-		if time < service_start:
-			v = numpy.random.rand()
-			if v > arrival_probability:
-				new_element = element(v)
-				q.append(new_element)
+		#random arrival at end of queue 
+		v = numpy.random.rand()
+		if v > arrival_probability:
+			new_element = element(v)
+			q.append(new_element)
+
+		#randomly deactivate servers; servers go down, but do not come back up
+		for server in server_dict:
+			f = numpy.random.rand()
+			if f < server.failure_probability:
+				server.active = False 
 
 		#service starts
-		else:
-			f = numpy.random.rand()
-			v = numpy.random.rand()
-			if v > arrival_probability:
-				new_element = element(v)
-				q.append(new_element)
-			n = q.pop()
-			if q.len > 0 and f > s.failure_probability:
-				s.service(n)
-				print q.len
-			elif f <= s.failure_probability:
-				print 'crash at time %d' %(time)
-		
+		n = q.pop()
+		if n != -1:
+			first_server = find_server(server_dict)
+			first_server.service(n)
+			print q.len
+	
 		time += 1
 
 	return q
