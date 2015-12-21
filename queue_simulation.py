@@ -7,9 +7,6 @@ import timeit
 
 import numpy
 
-import theano
-import my_logistic_regression as lr 
-
 class element(object):
 	def __init__(self, value):
 		self.value = value
@@ -55,31 +52,31 @@ class queue(object):
 				current = current.next
 				counter += 1
 
+class server(object):
+	def __init__(self, failure_probability = .01):
+		self.failure_probability = failure_probability
+	def service(self, element):
+		if type(element) != '<class '__main__.element'>':
+			print type(element)
+			raise TypeError('Not an element of queue!')
+		else:
+			print element.value, 'serviced'
+		return
 
 def queue_simulation(simulation_time, arrival_probability = .1):
 
-
-	clf = lr.sgd_optimization_mnist(n_epochs = 1)
-	W,b = clf.W.get_value(),clf.b.get_value()
-
-	predict = theano.function(
-		inputs = [clf.input],
-		outputs = [clf.y_pred],
-		)
-
-	rval = lr.load_data('/Users/Nickhil_Sethi/Documents/Datasets/mnist.pkl')
-	train_set_x, train_set_y = rval[0]
-
 	q = queue()
 	time = 0
-	
+	s = server()
 	while(time <= simulation_time):
 		v = numpy.random.rand()
 		if v > arrival_probability:
-			new_element = element(train_set_x[time])
+			new_element = element(v)
+			print type(new_element)
 			q.append(new_element)
-			predict(train_set_x[time])
+		print q.last.value
 
+		s.service(q.first)
 		#############
 		## service ##
 		#  of Queue #
