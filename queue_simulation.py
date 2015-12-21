@@ -19,6 +19,22 @@ class queue(object):
 		self.first = element('null')
 		self.last = element('null')
 
+	def pop(self):
+		if self.len==0:
+			print 'queue empty'
+			return
+		elif self.len == 1:
+			r  = self.first
+			self.first = 'null'
+			self.len = 0
+			return r
+		else:
+			print self.len, self.first.value
+			r = self.first
+			self.first = self.first.next
+			self.len = self.len - 1
+			return r
+
 	def append(self,el):
 		#if type(el != element):
 		#	raise TypeError('Not Correct Class!')
@@ -55,36 +71,46 @@ class queue(object):
 class server(object):
 	def __init__(self, failure_probability = .01):
 		self.failure_probability = failure_probability
-	def service(self, element):
-		if type(element) != '<class '__main__.element'>':
-			print type(element)
+	def service(self, customer):
+		if(not isinstance(customer,element)):
+			print customer, type(customer)
 			raise TypeError('Not an element of queue!')
 		else:
-			print element.value, 'serviced'
+			print customer.value, 'serviced'
 		return
 
-def queue_simulation(simulation_time, arrival_probability = .1):
+def queue_simulation(simulation_time = 40, service_start = 10, arrival_probability = .3, failure_probability = .01):
+	time = 0
 
 	q = queue()
-	time = 0
-	s = server()
-	while(time <= simulation_time):
-		v = numpy.random.rand()
-		if v > arrival_probability:
-			new_element = element(v)
-			print type(new_element)
-			q.append(new_element)
-		print q.last.value
+	s = server(failure_probability)
+	print 'failure probability = ', s.failure_probability, '\n'
 
-		s.service(q.first)
-		#############
-		## service ##
-		#  of Queue #
-		#############
+	while(time <= simulation_time):
+		#loading queue before service starts
+		if time < service_start:
+			v = numpy.random.rand()
+			if v > arrival_probability:
+				new_element = element(v)
+				q.append(new_element)
+
+		#service starts
+		else:
+			f = numpy.random.rand()
+			v = numpy.random.rand()
+			if v > arrival_probability:
+				new_element = element(v)
+				q.append(new_element)
+			n = q.pop()
+			if q.len > 0 and f > s.failure_probability:
+				s.service(n)
+				print q.len
+			elif f <= s.failure_probability:
+				print 'crash at time %d' %(time)
 		
 		time += 1
 
 	return q
 
 a = element(5)
-queue_simulation(400)
+queue_simulation(failure_probability = .5)
