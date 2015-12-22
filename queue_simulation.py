@@ -72,54 +72,78 @@ class server(object):
 	def __init__(self, failure_probability = .01):
 		self.failure_probability = failure_probability
 		self.active = True 
+
 	def service(self, customer):
 		if(not isinstance(customer,element)):
 			print customer, type(customer)
 			raise TypeError('Not an element of queue!')
 		else:
 			print customer.value, 'serviced'
-		return
+		
 
 def find_server(server_dict):
 	#returns first server which is active
+	l = len(server_dict)
 	if not isinstance(server_dict[0], server):
 		raise TypeError('Not a server!')
 	else:
-		for server in server_dict:
-			if server.active == True:
-				return server
+		for s in range(l):
+			serv = server_dict[s]
+			if serv.active == True:
+				return serv
+		print 'No active servers'
+		return -1
 
-def queue_simulation(simulation_time = 40, service_start = 10, num_servers = 1, arrival_probability = .3, failure_probability = .01):
+def queue_simulation(simulation_time = 400, service_start = 10, num_servers = 1, arrival_probability = .3, f_prob = .01):
+	
 	time = 0
+	service_counter = 0
 
 	q = queue()
-	server_dict = {}
+	serv_dict = {}
 	for i in range(num_servers):
-		server_dict[i] = server(failure_probability)
-	print 'failure probability = ', server_dict[0].failure_probability, '\n'
+		serv_dict[i] = server(failure_probability = f_prob)
+
+	print 'failure probability = ', serv_dict[0].failure_probability, '\n'
 
 	while(time <= simulation_time):
-		#random arrival at end of queue 
+		#random arrival at end of queue
+
+		servers_active = float(sum([serv_dict[i].active == True for i in range(num_servers)]))/(float(num_servers))
+
+		if servers_active == 0.0:
+			print '0% of original {} server(s) still active. ending simulation at time {}'.format(num_servers,time)
+			return time
+
+		print 'percent of servers still active = {}%'.format(servers_active*100)
 		v = numpy.random.rand()
 		if v > arrival_probability:
-			new_element = element(v)
+			new_element = element(service_counter)
 			q.append(new_element)
 
 		#randomly deactivate servers; servers go down, but do not come back up
-		for server in server_dict:
+		for k in range(num_servers):
+			serv = serv_dict[k]
 			f = numpy.random.rand()
-			if f < server.failure_probability:
-				server.active = False 
+			if f < serv.failure_probability:
+				print 'crash occurred in server {}'.format(k)
+				serv.active = False 
 
 		#service starts
 		n = q.pop()
 		if n != -1:
-			first_server = find_server(server_dict)
-			first_server.service(n)
-			print q.len
-	
+			first_server = find_server(serv_dict)
+			if isinstance(first_server, server):
+			#bug here! first_server is "NoneType"
+				first_server.service(n)
+				print 'current queue length', q.len
+			
+		print 
+		service_counter += 1
 		time += 1
 
 	return q
 
-queue_simulation(failure_probability = .5)
+s = server()
+print s.failure_probability
+queue_simulation(num_servers = 10)
