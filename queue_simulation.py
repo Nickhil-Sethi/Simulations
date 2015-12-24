@@ -11,7 +11,7 @@ class element(object):
 	def __init__(self, value):
 		self.value = value
 		self.next = 'null'
-		self.before = 'null'
+		self.prev = 'null'
 
 class queue(object):
 	def __init__(self):
@@ -29,7 +29,6 @@ class queue(object):
 			self.len = 0
 			return r
 		else:
-			print self.len, self.first.value
 			r = self.first
 			self.first = self.first.next
 			self.len = self.len - 1
@@ -43,30 +42,48 @@ class queue(object):
 			self.last = el
 			self.len += 1
 		else:
+			l = self.last
 			self.last.next = el
 			self.last = el
+			self.last.prev = l
 			self.len += 1
+
 
 	def get_next(self,el):
 		return el.next.value
 
+	def search_forward(self,a):
+		counter = 0
+		current = self.first
+		while(counter <= a and counter <= self.len):
+			if(counter == a):
+				return current.value
+			current = current.next
+			counter += 1
+	
+	def search_back(self,a):
+		counter = self.len
+		current = self.last
+		while(counter >= self.len - a and counter <= 0):
+			if(counter == a):
+				return current.value
+			current = current.next
+			counter += 1
+	 
 	def get_element(self,a):
 		#linear search for a'th element in queue
 		if type(a) != int:
 			raise TypeError('Index must be integer!')
 		elif a < 0:
 			raise TypeError('a must be greater than 0')
-
 		elif a > self.len:
-			raise TypeError('Index is greater than length of queue')
+			raise TypeError('Index is greater than length of queue!')
+
+		#searching
+		elif a > numpy.floor(float(self.len)/2.0):
+			self.search_back(a)
 		else:
-			counter = 0
-			current = self.first
-			while(counter <= a and counter <= self.len):
-				if(counter == a):
-					return current.value
-				current = current.next
-				counter += 1
+			self.search_forward(a)
 
 class server(object):
 	def __init__(self, failure_probability = .01):
@@ -94,8 +111,8 @@ def find_server(server_dict):
 		print 'No active servers'
 		return -1
 
-def queue_simulation(simulation_time = 400, service_start = 10, num_servers = 1, arrival_probability = .3, f_prob = .01):
-	
+def queue_simulation(f_prob ,simulation_time = 400, service_start = 10, num_servers = 1, arrival_probability = .3):
+
 	time = 0
 	service_counter = 0
 
@@ -108,12 +125,11 @@ def queue_simulation(simulation_time = 400, service_start = 10, num_servers = 1,
 
 	while(time <= simulation_time):
 		#random arrival at end of queue
-
 		servers_active = float(sum([serv_dict[i].active == True for i in range(num_servers)]))/(float(num_servers))
 
 		if servers_active == 0.0:
 			print '0% of original {} server(s) still active. ending simulation at time {}'.format(num_servers,time)
-			return time
+			return time,q,serv_dict
 
 		print 'percent of servers still active = {}%'.format(servers_active*100)
 		v = numpy.random.rand()
@@ -126,7 +142,7 @@ def queue_simulation(simulation_time = 400, service_start = 10, num_servers = 1,
 			serv = serv_dict[k]
 			f = numpy.random.rand()
 			if f < serv.failure_probability:
-				print 'crash occurred in server {}'.format(k)
+				print 'a crash occurred in server {}'.format(k)
 				serv.active = False 
 
 		#service starts
@@ -137,7 +153,6 @@ def queue_simulation(simulation_time = 400, service_start = 10, num_servers = 1,
 			#bug here! first_server is "NoneType"
 				first_server.service(n)
 				print 'current queue length', q.len
-			
 		print 
 		service_counter += 1
 		time += 1
@@ -146,4 +161,7 @@ def queue_simulation(simulation_time = 400, service_start = 10, num_servers = 1,
 
 s = server()
 print s.failure_probability
-queue_simulation(num_servers = 10)
+t,q,sd = queue_simulation( f_prob = .05 , num_servers = 1, arrival_probability = .7)
+for x in xrange(1):
+	print sd[x].active
+
