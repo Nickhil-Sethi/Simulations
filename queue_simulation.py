@@ -36,8 +36,8 @@ class queue(object):
 			return r
 
 	def append(self,el):
-		#if type(el != element):
-		#	raise TypeError('Not Correct Class!')
+		if not isinstance(el, element):
+			raise TypeError('Not Correct Class!')
 		if self.len == 0:
 			self.first = el
 			self.last = el
