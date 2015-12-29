@@ -3,6 +3,7 @@ sys.path.insert(0,'/Library/Python/2.7/site-packages')
 
 import os
 import sys
+import time
 import timeit
 
 import numpy
@@ -153,6 +154,14 @@ def queue_simulation(f_prob ,simulation_time = 400, service_start = 10, num_serv
 			#bug here! first_server is "NoneType"
 				first_server.service(n)
 				print 'current queue length', q.len
+
+		#modified service starts
+		first_server = find_server(serv_dict)
+		if first_server != -1:
+			n = q.pop()
+			if n != -1:
+				first_server.service(n)
+
 		print 
 		service_counter += 1
 		time += 1
@@ -161,7 +170,7 @@ def queue_simulation(f_prob ,simulation_time = 400, service_start = 10, num_serv
 
 s = server()
 print s.failure_probability
-t,q,sd = queue_simulation( f_prob = .05 , num_servers = 1, arrival_probability = .7)
-for x in xrange(1):
+t,q,sd = queue_simulation( f_prob = .05 , num_servers = 10, arrival_probability = .7)
+for x in xrange(10):
 	print sd[x].active
 
