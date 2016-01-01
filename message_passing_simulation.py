@@ -8,7 +8,7 @@ import timeit
 
 import numpy as np
 
-N = 10
+N = 500
 
 def construct_random_graph_asymmetric(N, delta):
 	#induces a simple partial order on nodes
@@ -66,7 +66,7 @@ class server(object):
 				r = np.random.random_integers(0,l-1)
 				self.outbuf[self.children[r]] = 'm'
 				self.terminated = True
-				print "server {} sent message to server {}".format(self.sid,self.children[r])
+				#print "server {} sent message to server {}".format(self.sid,self.children[r])
 		return
 def keep_going(serv_dict):
 	#checks if there is still a server running
@@ -78,41 +78,36 @@ def keep_going(serv_dict):
 			return True 
 	return False
 
-def message_pass_deterministic(adj,sim_time):
-
-	#number of servers (nodes) extracted from adj
-	n = len(adj)
-	print "number of nodes = {}".format(n)
+def message_pass_deterministic(N,sim_time,delta = .01):
+	print "number of servers = {}".format(N)
+	print "creating network..."
+	adj = construct_random_graph_asymmetric(N,delta)
 
 	#constructing dictionary of servers
+	print "initializing servers..."
 	serv_dict = {}
 	for k in adj:
 		serv_dict[k] = server(k,adj)
 
 	#initializing root server with message on all outgoing channels
-	print serv_dict[0].children, serv_dict[0].parents, serv_dict[0].outbuf
 	for k in serv_dict[0].children:
 		serv_dict[0].outbuf[k] = 'm'
 
-	print serv_dict[1].outbuf
 	#begin simulation
 	time = 0
+	print "beginning simulation..."
 	while time <= sim_time and keep_going(serv_dict):
 		for k in serv_dict:
 			#serv_dict[k].comp(serv_dict)
 			serv_dict[k].comp_random1(serv_dict)
 		
-		if 'm' in [serv_dict[n-1].inbuf[k] for k in serv_dict[n-1].parents]:
-			print 'success!'
+		if 'm' in [serv_dict[N-1].inbuf[k] for k in serv_dict[N-1].parents]:
+			print '\n','success! server {} received message from {} at time {}'.format(N-1,[x for x in serv_dict[N-1].inbuf if serv_dict[N-1].inbuf[x] == 'm'],time)
 			return
 
 		time += 1
-	print 'fail! simulation ended at time {}'.format(time)
+	print '\n','fail! simulation ended at time {}'.format(time)
 	return 
 
-
-adj = construct_random_graph_asymmetric(N,.5)
-print adj
-
-message_pass_deterministic(adj,N*N)
+message_pass_deterministic(N, 2*N)
 
