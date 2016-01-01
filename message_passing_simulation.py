@@ -35,12 +35,14 @@ class server(object):
 		self.state = [self.inbuf,self.outbuf,self.terminated]
 
 	def comp(self,serv_dict):
+		print "server {} computing".format(self.sid)
 		for p in self.parents:
-			print p, serv_dict[self.sid].children
-			self.inbuf[p] = serv_dict[p].outbuf[self.sid]
+			print "children of {}: {}".format(p, serv_dict[p].children), "outbuf of {}: {}".format(p,serv_dict[p].outbuf)
+			self.inbuf[p] = (serv_dict[p]).outbuf[self.sid]
 		if 'm' in [self.inbuf[i] for i in self.parents]:
 			for i in self.children:
 				self.outbuf[i] = 'm'
+			print 'outbuf {}'.format(self.sid), 
 			self.terminated = True
 		'''
 		for j in self.inbuf():
@@ -79,12 +81,13 @@ def message_pass_deterministic(adj,sim_time):
 		time += 1
 		if 'm' in [serv_dict[n].inbuf[k] for k in serv_dict[n].parents]:
 			print 'success!'
+			return
 	return 
+
 def message_pass_random(adj,sim_time):
 	fdasf
 	return False 
 
 
 adj = construct_random_graph_asymmetric(N,.5)
-print adj
 message_pass_deterministic(adj,N+1)
