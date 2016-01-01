@@ -8,7 +8,7 @@ import timeit
 
 import numpy as np
 
-N = 500
+N = 7000
 
 def construct_random_graph_asymmetric(N, delta):
 	#induces a simple partial order on nodes
@@ -19,6 +19,9 @@ def construct_random_graph_asymmetric(N, delta):
 			if(np.random.rand() < delta):
 				adj[i].add(j)
 	return adj
+
+def construct_scale_free_graph(N, w):
+	return
 
 class server(object):
 	def __init__(self,sid,adj):
@@ -43,7 +46,7 @@ class server(object):
 		self.state = [self.inbuf,self.outbuf,self.terminated]
 
 	def comp(self,serv_dict):
-		print "server {} computing".format(self.sid)
+		#print "server {} computing".format(self.sid)
 		for p in self.parents:
 			#print "children of {}: {}".format(p, serv_dict[p].children), "outbuf of {}: {}".format(p, serv_dict[p].outbuf)
 			if serv_dict[p].outbuf[self.sid] != None:
@@ -78,7 +81,7 @@ def keep_going(serv_dict):
 			return True 
 	return False
 
-def message_pass_deterministic(N,sim_time,delta = .01):
+def message_pass_deterministic(N,sim_time,delta = .01,check_in = 500):
 	print "number of servers = {}".format(N)
 	print "creating network..."
 	adj = construct_random_graph_asymmetric(N,delta)
@@ -98,16 +101,18 @@ def message_pass_deterministic(N,sim_time,delta = .01):
 	print "beginning simulation..."
 	while time <= sim_time and keep_going(serv_dict):
 		for k in serv_dict:
-			#serv_dict[k].comp(serv_dict)
-			serv_dict[k].comp_random1(serv_dict)
+			serv_dict[k].comp(serv_dict)
+			#serv_dict[k].comp_random1(serv_dict)
 		
 		if 'm' in [serv_dict[N-1].inbuf[k] for k in serv_dict[N-1].parents]:
 			print '\n','success! server {} received message from {} at time {}'.format(N-1,[x for x in serv_dict[N-1].inbuf if serv_dict[N-1].inbuf[x] == 'm'],time)
 			return
 
 		time += 1
+		if time%check_in == 0:
+			print 'still going at time {}'.format(time)
 	print '\n','fail! simulation ended at time {}'.format(time)
 	return 
 
-message_pass_deterministic(N, 2*N)
+message_pass_deterministic(N, 2*N/3,delta = .005)
 
