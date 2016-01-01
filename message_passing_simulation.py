@@ -18,8 +18,6 @@ def construct_random_graph_asymmetric(N, delta):
 		for j in range(i+1,N):
 			if(np.random.rand() < delta):
 				adj[i].add(j)
-	#for i in range(N):
-	#	adj[i] = list(adj[i])
 	return adj
 
 class server(object):
@@ -27,32 +25,49 @@ class server(object):
 		if not type(adj) is dict:
 			raise TypeError('server object must receive dictionary for adj')
 		self.sid = sid
-		self.inbuf = {}
-		self.outbuf = {}
-		self.children = set(adj[self.sid])
-		self.parents = set([k for k in adj if self.sid in adj[k]])
+		self.children = list(adj[self.sid])
+		self.parents = list(set([k for k in adj if self.sid in adj[k]]))
+		if self.parents:
+			self.inbuf = {}
+			for p in self.parents:
+				self.inbuf[p] = 'null'
+		else:
+			self.inbuf = None
+		if self.children:
+			self.outbuf = {}
+			for c in self.children:
+				self.outbuf[c] = 'null'
+		else:
+			self.outbuf = None
 		self.terminated = False
 		self.state = [self.inbuf,self.outbuf,self.terminated]
 
 	def comp(self,serv_dict):
 		print "server {} computing".format(self.sid)
 		for p in self.parents:
-			print "children of {}: {}".format(p, serv_dict[p].children), "outbuf of {}: {}".format(p,serv_dict[p].outbuf)
-			self.inbuf[p] = (serv_dict[p]).outbuf[self.sid]
+			#print "children of {}: {}".format(p, serv_dict[p].children), "outbuf of {}: {}".format(p, serv_dict[p].outbuf)
+			if serv_dict[p].outbuf[self.sid] != None:
+				self.inbuf[p] = (serv_dict[p]).outbuf[self.sid]
 		if 'm' in [self.inbuf[i] for i in self.parents]:
 			for i in self.children:
 				self.outbuf[i] = 'm'
-			print 'outbuf {}'.format(self.sid), 
 			self.terminated = True
-		'''
-		for j in self.inbuf():
-			if self.inbuf[j] == 'm':
-				for i in self.children:
-					self.outbuf[i] = 'm'
-				return
-		'''
-		return
 
+		return
+	def comp_random1(self,serv_dict):
+		#print "server {} computing".format(self.sid)
+		for p in self.parents:
+			#print "children of {}: {}".format(p, serv_dict[p].children), "outbuf of {}: {}".format(p, serv_dict[p].outbuf)
+			if serv_dict[p].outbuf[self.sid] != None:
+				self.inbuf[p] = (serv_dict[p]).outbuf[self.sid]
+		if 'm' in [self.inbuf[i] for i in self.parents]:
+			if self.children:
+				l = len(self.children)
+				r = np.random.random_integers(0,l-1)
+				self.outbuf[self.children[r]] = 'm'
+				self.terminated = True
+				print "server {} sent message to server {}".format(self.sid,self.children[r])
+		return
 def keep_going(serv_dict):
 	#checks if there is still a server running
 	if not type(serv_dict) is dict:
@@ -64,30 +79,40 @@ def keep_going(serv_dict):
 	return False
 
 def message_pass_deterministic(adj,sim_time):
+
+	#number of servers (nodes) extracted from adj
 	n = len(adj)
+	print "number of nodes = {}".format(n)
+
+	#constructing dictionary of servers
 	serv_dict = {}
 	for k in adj:
 		serv_dict[k] = server(k,adj)
 
 	#initializing root server with message on all outgoing channels
+	print serv_dict[0].children, serv_dict[0].parents, serv_dict[0].outbuf
 	for k in serv_dict[0].children:
 		serv_dict[0].outbuf[k] = 'm'
 
+	print serv_dict[1].outbuf
+	#begin simulation
 	time = 0
 	while time <= sim_time and keep_going(serv_dict):
 		for k in serv_dict:
-			print k
-			serv_dict[k].comp(serv_dict)
-		time += 1
-		if 'm' in [serv_dict[n].inbuf[k] for k in serv_dict[n].parents]:
+			#serv_dict[k].comp(serv_dict)
+			serv_dict[k].comp_random1(serv_dict)
+		
+		if 'm' in [serv_dict[n-1].inbuf[k] for k in serv_dict[n-1].parents]:
 			print 'success!'
 			return
-	return 
 
-def message_pass_random(adj,sim_time):
-	fdasf
-	return False 
+		time += 1
+	print 'fail! simulation ended at time {}'.format(time)
+	return 
 
 
 adj = construct_random_graph_asymmetric(N,.5)
-message_pass_deterministic(adj,N+1)
+print adj
+
+message_pass_deterministic(adj,N*N)
+
