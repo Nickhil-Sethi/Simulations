@@ -12,6 +12,8 @@ N = 10000
 
 def construct_random_graph_asymmetric(N, delta):
 	#induces a simple partial order on nodes
+	#i has probability delta of connecting to nodes j > i
+	#i has probability 0 of connecting 
 	adj = {}
 	for i in range(N):
 		adj[i] = set()
@@ -19,7 +21,13 @@ def construct_random_graph_asymmetric(N, delta):
 			if(np.random.rand() < delta):
 				adj[i].add(j)
 	return adj
-
+	'''
+def constant_connection_level_network(N,k):
+	adj = {}
+	for  i in range(N):
+		adj[i] = 
+	return adj
+	'''
 def construct_scale_free_graph(N, w):
 	return
 
@@ -83,8 +91,15 @@ def keep_going(serv_dict):
 	return False
 
 def message_pass(N,sim_time,delta = .01,check_in = 500, random = True):
-	print "number of servers = {}".format(N)
+
+	if random:
+		print "random mesage passing simulation"
+	else:
+		print "deterministic message passing simulation"
+
+	print "number of servers = {}".format(N), '\n'
 	print "creating network..."
+	
 	adj = construct_random_graph_asymmetric(N,delta)
 
 	#constructing dictionary of servers
@@ -99,7 +114,7 @@ def message_pass(N,sim_time,delta = .01,check_in = 500, random = True):
 
 	#begin simulation
 	time = 0
-	print "beginning simulation..."
+	print "beginning simulation...", "\n"
 	while time <= sim_time:
 		for k in serv_dict:
 			if random == True:
@@ -114,9 +129,9 @@ def message_pass(N,sim_time,delta = .01,check_in = 500, random = True):
 
 		time += 1
 		if time%check_in == 0:
-			print 'still going at time {}'.format(time)
-	print '\n','fail! simulation ended at time {}'.format(time)
+			print '    ...still going at time {}'.format(time)
+	print '\n', 'fail! simulation ended at time {}'.format(time)
 	return 
 
-message_pass(N, 2*N/3,delta = .005)
+message_pass(N, 2*N, delta = .005)
 
