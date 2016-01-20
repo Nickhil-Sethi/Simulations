@@ -8,7 +8,7 @@ import timeit
 
 import numpy as np
 
-N = 10000
+
 
 def construct_random_graph_asymmetric(N, delta):
 	#induces a simple partial order on nodes
@@ -38,18 +38,21 @@ class server(object):
 		self.sid = sid
 		self.children = list(adj[self.sid])
 		self.parents = list(set([k for k in adj if self.sid in adj[k]]))
+
 		if self.parents:
 			self.inbuf = {}
 			for p in self.parents:
 				self.inbuf[p] = 'null'
 		else:
 			self.inbuf = None
+
 		if self.children:
 			self.outbuf = {}
 			for c in self.children:
 				self.outbuf[c] = 'null'
 		else:
 			self.outbuf = None
+
 		self.terminated = False
 		self.state = [self.inbuf,self.outbuf,self.terminated]
 
@@ -132,6 +135,8 @@ def message_pass(N,sim_time,delta = .01,check_in = 500, random = True):
 			print '    ...still going at time {}'.format(time)
 	print '\n', 'fail! simulation ended at time {}'.format(time)
 	return 
+
+N = 10000
 
 message_pass(N, 2*N, delta = .005)
 
