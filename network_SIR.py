@@ -2,41 +2,14 @@
 """
 Created on Tue Feb 24 15:48:10 2015
 
-@author: Nickhil_Sethi , Odreka_Ahmed , Chitra Kallakuri
+@author: Nickhil_Sethi
 """
 #from graph_tool.all import *
 import numpy as np
 import matplotlib.pyplot as plt
 #close('all')
 #s = 0 
-#i = 1
-#r = 2
 
-#random graph parameter
-delta = .037
-#scale free graph parameter
-w = 0.0
-#small-world parameter
-p = .6
-
-num_simulations = 1
-dt = .01
-time = 1000
-sick = np.zeros(time)
-N = 100 
-state = np.zeros(N)
-adj = np.zeros((N,N))
-alpha_raw = 1.0
-beta_raw = 1.0
-alpha = alpha_raw*dt
-beta = beta_raw*dt
-plots = np.zeros((3,time))
-avg = np.zeros((3,time))
-avg_cost = 0
-connect = 0
-nepidemic = 0
-
-state[0] = 1
 
 '''
 These are two functions that are used both in constructing random graphs, and running our
@@ -49,6 +22,7 @@ simulation.
 #Output: Provides array representing "in-neighborhood" of v 
 #(i.e. vertices which connect to v. If adj is symmetric, in-neighborhood 
 #and out-neighborhood are the same) 
+
 def find_in_neighborhood(v,adj):
     neighborhood_v = []
     for j in range(N):
@@ -56,42 +30,32 @@ def find_in_neighborhood(v,adj):
             neighborhood_v.append(j)
     return neighborhood_v
 
+
 #Input: A number and a set containing that number.
 #Output a randomly chosen number that is not the input number, from uniform distribution
-def choose_random(i,N):
-    x = np.random.choice(N)
-    if(x == i):
-        x = choose_random(i,N)
-        return x
-    else:
-        return x
-#Same as above, but chooses randomly from given distribution
-def choose_random_2(i,N,Pr):
-    x = np.random.choice(N, size = None , replace = True , p = Pr)
-    if(x == i):
-        x = choose_random_2(i,N,Pr)
-        return x
-    else:
-        return x
+
 #Input: a number of vertices, parameter delta
 #Constructs graph as follows: N vertices, sets i <=> j with probability delta
 #Output: Adjacency matrix
+
 def construct_random_graph(N, delta):
-    k = 0
-    adj = rand(N,N)
-    for i in range(N):
-        for j in range(N):
-            if(j < i):
-                if(adj[i,j] < delta):
-                    adj[i][j] = 1
-                    adj[j][i] = 1
-                else:
-                    adj[i][j] = 0
-                    adj[j][i] = 0
-            if(i == j):
-                adj[i][j] = 0
-                adj[j][i] = 0
-    return adj , k
+
+    adj_list = {}
+    nodes = range(N)
+
+    # for each node
+    for i in nodes:
+        adj_list[i] = set()
+
+        # can be more space efficient?
+        others = list(set(nodes).remove(i))
+        for j in others:
+
+            # if random number ~U[0,1] < delta
+            if np.random.rand() < delta:
+                adj_list[i].add(j)
+
+    return adj_list
 
 #Constructs scale free graph
 #Input: number of vertices, parameter omega
@@ -125,9 +89,9 @@ def construct_scale_free_graph(N, w):
         Pr = []
         for i in range(v+1):
             Pr.append(float(l[i])/float(total))
-            
-    k = 1
-    return adj , k
+    
+
+    return adj
     
 #Input: Number of vertices N, parameter p
 #Constructs graph by beginning with circular ring on which every vertex is connected
@@ -235,7 +199,7 @@ def average_centrality(adj):
 
 #Output: Performs vertex_transition on each v in the graph. Updates state
 
-def dynamics(state, adj,in_neighborhoods):  
+def dynamics(state, adj, in_neighborhoods):  
     state_new = np.zeros(N)
     for v in range(N) :
         in_v = in_neighborhoods[v]
@@ -244,87 +208,122 @@ def dynamics(state, adj,in_neighborhoods):
     state = state_new
     return state,adj
 
-#Main Program. Simulates num_simulation disease spreads, with newly generated graph
-#Every time.
-thing = np.zeros((3,num_simulations))
-for ii in range(num_simulations):
-    
-    adj, q = construct_random_graph(N,delta)
-    #adj , q = construct_scale_free_graph(N,w)
-    #adj , q = construct_small_world_graph(N, p)
+def main():
+    thing = np.zeros((3,num_simulations))
+    for ii in range(num_simulations):
+        
+        adj, q = construct_random_graph(N,delta)
+        #adj , q = construct_scale_free_graph(N,w)
+        #adj , q = construct_small_world_graph(N, p)
 
-    in_neighborhoods = find_all_in_neighborhoods(adj)
-    
+        in_neighborhoods = find_all_in_neighborhoods(adj)
+        
+        state = np.zeros(N)
+        state[0] = 1
+        cost = 0   
+        for i in range(time):          
+            
+            counter_i = 0
+            counter_s = 0
+            counter_r = 0
+            for j in state:
+                if(j == 0):
+                    counter_s = counter_s + 1  
+                if(j == 1):
+                    counter_i = counter_i + 1           
+                if(j == 2):
+                    counter_r = counter_r + 1  
+                #print counter_s , counter_i , counter_r
+            plots[:,i] = [counter_s , counter_i , counter_r]
+            dynamics(state,adj,in_neighborhoods)  
+            for k in range(N):
+                cost = cost + plots[1,k]*dt
+            
+        fs = plots[0, time-1]
+        fi = plots[1, time-1]
+        fr = plots[2, time-1]
+        #print fs , fi , fr
+        thing[0,ii] = fs
+        thing[1, ii] = fi
+        thing[2, ii] = fr
+        
+        if(plots[0 , time - 1] < 20):
+            nepidemic = nepidemic + 1
+        #print cost  
+        #plot(plots[0,:])
+        #plot(plots[1,:])
+        #plot(plots[2,:])
+        #show()
+        avg_cost = avg_cost + (float(1)/float(num_simulations))*cost
+        avg = avg + (float(1)/float(num_simulations))*plots
+        connect = connect + (float(1)/float(num_simulations))*average_centrality(adj)
+        
+    if(q==0):
+        print 'Random'
+        print "delta = ", delta
+    if(q == 1):
+        print 'Scale Free'
+        print "omega = ", w
+    if(q == 2):
+        print 'Small World'
+        print "p = ", p
+        
+    print "Number of Simulations = ", num_simulations 
+    print "N =", N
+    print "dt =", dt 
+    print "alpha = ", alpha_raw
+    print "beta = ", beta_raw
+    print "Number of Non-epidemics", nepidemic   
+    print "Final S =", avg[0, time-1]
+    print "Final I =", avg[1, time-1]
+    print "Final R =", avg[2, time-1]
+    print "Average Cost = ", avg_cost
+    print "Average Connectivity =", connect
+    plot(avg[0,:])
+    plot(avg[1,:])
+    plot(avg[2,:])
+
+    #figure(2)
+    #hist(thing[0,:])
+
+    #figure(3)
+    #hist(thing[1,:])
+
+    #figure(4)
+    #hist(thing[2,:])
+
+if __name__ == '__main__':
+
+        #i = 1
+    #r = 2
+
+    #random graph parameter
+    delta = .037
+    #scale free graph parameter
+    w = 0.0
+    #small-world parameter
+    p = .6
+
+    num_simulations = 1
+    dt = .01
+    time = 1000
+    sick = np.zeros(time)
+    N = 100 
     state = np.zeros(N)
+    adj = np.zeros((N,N))
+    alpha_raw = 1.0
+    beta_raw = 1.0
+    alpha = alpha_raw*dt
+    beta = beta_raw*dt
+    plots = np.zeros((3,time))
+    avg = np.zeros((3,time))
+    avg_cost = 0
+    connect = 0
+    nepidemic = 0
+
     state[0] = 1
-    cost = 0   
-    for i in range(time):          
-        
-        counter_i = 0
-        counter_s = 0
-        counter_r = 0
-        for j in state:
-            if(j == 0):
-                counter_s = counter_s + 1  
-            if(j == 1):
-                counter_i = counter_i + 1           
-            if(j == 2):
-                counter_r = counter_r + 1  
-            #print counter_s , counter_i , counter_r
-        plots[:,i] = [counter_s , counter_i , counter_r]
-        dynamics(state,adj,in_neighborhoods)  
-        for k in range(N):
-            cost = cost + plots[1,k]*dt
-        
-    fs = plots[0, time-1]
-    fi = plots[1, time-1]
-    fr = plots[2, time-1]
-    #print fs , fi , fr
-    thing[0,ii] = fs
-    thing[1, ii] = fi
-    thing[2, ii] = fr
-    
-    if(plots[0 , time - 1] < 20):
-        nepidemic = nepidemic + 1
-    #print cost  
-    #plot(plots[0,:])
-    #plot(plots[1,:])
-    #plot(plots[2,:])
-    #show()
-    avg_cost = avg_cost + (float(1)/float(num_simulations))*cost
-    avg = avg + (float(1)/float(num_simulations))*plots
-    connect = connect + (float(1)/float(num_simulations))*average_centrality(adj)
-    
-if(q==0):
-    print 'Random'
-    print "delta = ", delta
-if(q == 1):
-    print 'Scale Free'
-    print "omega = ", w
-if(q == 2):
-    print 'Small World'
-    print "p = ", p
-    
-print "Number of Simulations = ", num_simulations 
-print "N =", N
-print "dt =", dt 
-print "alpha = ", alpha_raw
-print "beta = ", beta_raw
-print "Number of Non-epidemics", nepidemic   
-print "Final S =", avg[0, time-1]
-print "Final I =", avg[1, time-1]
-print "Final R =", avg[2, time-1]
-print "Average Cost = ", avg_cost
-print "Average Connectivity =", connect
-plot(avg[0,:])
-plot(avg[1,:])
-plot(avg[2,:])
 
-#figure(2)
-#hist(thing[0,:])
-
-#figure(3)
-#hist(thing[1,:])
-
-#figure(4)
-#hist(thing[2,:])
+    print construct_random_graph(20, .5)
+    #Main Program. Simulates num_simulation disease spreads, with newly generated graph
+    #Every time.
+    
