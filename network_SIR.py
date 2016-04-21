@@ -17,43 +17,43 @@ simulation.
 
 '''
 
-#Input: A fixed vertex v, adjacency matrix adj
 
-#Output: Provides array representing "in-neighborhood" of v 
-#(i.e. vertices which connect to v. If adj is symmetric, in-neighborhood 
-#and out-neighborhood are the same) 
+def connect(i,j,adj,symmetric=True):
+    if i not in adj:
+        raise IndexError('i not in adjacency list')
+    if j not in adj:
+        raise IndexError('j not in adjacency list')
+    
+    adj[i].add(j)
+    if symmetric:
+        adj[j].add(i)
 
-def find_in_neighborhood(v,adj):
-    neighborhood_v = []
-    for j in range(N):
-        if(adj[j][v] == 1):
-            neighborhood_v.append(j)
-    return neighborhood_v
-
-
-#Input: A number and a set containing that number.
-#Output a randomly chosen number that is not the input number, from uniform distribution
-
-#Input: a number of vertices, parameter delta
-#Constructs graph as follows: N vertices, sets i <=> j with probability delta
-#Output: Adjacency matrix
+def disconnect(i,j,adj,symmetric=True):
+    if i not in adj:
+        raise IndexError('i not in adjacency list')
+    if j not in adj:
+        raise IndexError('j not in adjacency list')
+    
+    adj[i].remove(j)
+    if symmetric:
+        adj[j].remove(i)
 
 def construct_random_graph(N, delta):
 
     adj_list = {}
     nodes = range(N)
 
-    # for each node
     for i in nodes:
         adj_list[i] = set()
-
+    # for each node
+    for i in nodes:
         # can be more space efficient?
-        others = list(set(nodes).remove(i))
-        for j in others:
-
+        set(nodes).remove(i)
+        for j in list(nodes):
             # if random number ~U[0,1] < delta
             if np.random.rand() < delta:
-                adj_list[i].add(j)
+                connect(i,j,adj_list)
+        set(nodes).add(i)
 
     return adj_list
 
@@ -64,32 +64,31 @@ def construct_random_graph(N, delta):
 #vertex i has
 #Output: Adjacency matrix    
 def construct_scale_free_graph(N, w):
+    
     Pr = []
     Pr.append(.5)
     Pr.append(.5)
-    adj = np.zeros((N,N))
-    adj[0,1] = 1
-    adj[1,0] = 1
-    for v in range(2,N):
-        #print len(range(v))
-        #print len(Pr)
-        U = []
-        for i in range(v):
-            U.append(float(1)/float(v))
-        X = []
-        for i in range(v):
-            X.append( (1-w)*U[i] + (w)*(Pr[i]) )
-        x = np.random.choice(range(v), size = None , replace = True, p = X)
-        adj[v,x] = 1
-        adj[x,v] = 1
-        l = []
-        for i in range(v+1):
-            l.append(len(find_in_neighborhood(i,adj)))
-        total = sum(l)
-        Pr = []
-        for i in range(v+1):
-            Pr.append(float(l[i])/float(total))
+
+    adj = {}
+    for i in xrange(N):
+        adj[i] = set()
     
+    adj[0].add(1)
+    adj[1].add(0)
+
+    for v in range(2,N):
+
+        U = [ 1./float(v) for i in xrange(v) ]
+        X = [ (1-w)*U[i] + (w)*(Pr[i]) for i in xrange(v)]
+        
+        x = np.random.choice(range(v), size = None , replace = True, p = X)
+        connect(v,x,adj)
+
+        l = [ len(adj[i]) for i in xrange(v+1) ]
+        
+        # update Preferential distribution
+        total = sum(l)
+        Pr = [float(l[i])/float(total) for i in xrange(v+1)]
 
     return adj
     
@@ -99,52 +98,29 @@ def construct_scale_free_graph(N, w):
 #reconnected to another vertex chosen from a uniform distribution
 #Output: Adjacency matrix
 def construct_small_world_graph(N, p):
-    adj = np.zeros((N,N))
-    for i in range(2,N-2):
-        adj[i,i-1] = 1
-        adj[i-1,i] = 1
-        
-        adj[i,i+1] = 1
-        adj[i+1,i] = 1
-        
-        adj[i,i-2] = 1
-        adj[i-2,i] = 1
-        
-        adj[i+2,i] = 1
-        adj[i,i+2] = 1
+    adj = {}
+    for i in xrange(N):
+        adj[i] = set()
+
+    for i in xrange(N):
+        connect(i, (i-1)%N, adj)
+        connect(i, (i+1)%N, adj)
+        connect(i, (i-2)%N, adj)
+        connect(i, (i+2)%N, adj)
     
-    if(i == 0):
-        adj[0,1] = 1
-        adj[1,0] = 1
-        adj[0,2] = 1
-        adj[2,0] = 1
-        adj[0,N-1] = 1
-        adj[N-1,0] = 1
-        adj[0,N-2] = 1
-        adj[N-2,0] = 1
-    if(i == 1):
-        adj[0,1] = 1
-        adj[1,0] = 1
-        adj[0,2] = 1
-        adj[2,0] = 1
-        adj[0,N-1] = 1
-        adj[N-1,0] = 1
-        adj[0,N-2] = 1
-        adj[N-2,0] = 1
+    nodes = range(N)
     for i in range(N):
         for j in range(N):
-            if(adj[i,j] == 1):
+            if(j in adj[i]):
                 o = uniform(0,1)
                 if(o < p):
-                    adj[i,j] = 0
-                    adj[j,i] = 0
-                    x = choose_random(i,N)
-                    adj[i,x] = 1
-                    adj[x,i] = 1
-    
-    k = 2
-    
-    return adj , k
+                    nodes.remove(j)
+                    x = np.random.choice(others)
+                    nodes.add(j)
+                    disconnect(i,j,adj)
+                    connect(i,x,adj)
+
+    return adj
 
 
 #Input: A fixed vertex v, in_V the in-neighborhood of V, 
@@ -323,7 +299,7 @@ if __name__ == '__main__':
 
     state[0] = 1
 
-    print construct_random_graph(20, .5)
+    print construct_scale_free_graph(50, .9)
     #Main Program. Simulates num_simulation disease spreads, with newly generated graph
     #Every time.
     
