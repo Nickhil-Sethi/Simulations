@@ -6,7 +6,7 @@ Created on Tue Feb 24 15:48:10 2015
 """
 #from graph_tool.all import *
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 #close('all')
 #s = 0 
 
@@ -19,9 +19,9 @@ simulation.
 
 
 def connect(i,j,adj,symmetric=True):
-    if i not in adj:
+    if not i in adj:
         raise IndexError('i not in adjacency list')
-    if j not in adj:
+    if not j in adj:
         raise IndexError('j not in adjacency list')
     
     adj[i].add(j)
@@ -46,14 +46,15 @@ def construct_random_graph(N, delta):
     for i in nodes:
         adj_list[i] = set()
     # for each node
+    others = set(nodes)
     for i in nodes:
         # can be more space efficient?
-        set(nodes).remove(i)
+        others.remove(i)
         for j in list(nodes):
             # if random number ~U[0,1] < delta
             if np.random.rand() < delta:
                 connect(i,j,adj_list)
-        set(nodes).add(i)
+        others.add(i)
 
     return adj_list
 
@@ -76,7 +77,7 @@ def construct_scale_free_graph(N, w):
     adj[0].add(1)
     adj[1].add(0)
 
-    for v in range(2,N):
+    for v in xrange(2,N):
 
         U = [ 1./float(v) for i in xrange(v) ]
         X = [ (1-w)*U[i] + (w)*(Pr[i]) for i in xrange(v)]
@@ -108,14 +109,14 @@ def construct_small_world_graph(N, p):
         connect(i, (i-2)%N, adj)
         connect(i, (i+2)%N, adj)
     
-    nodes = range(N)
+    nodes = set(range(N))
     for i in range(N):
-        for j in range(N):
-            if(j in adj[i]):
-                o = uniform(0,1)
+        for j in range(i+1,N):
+            if j in adj[i]:
+                o = np.random.rand()
                 if(o < p):
                     nodes.remove(j)
-                    x = np.random.choice(others)
+                    x = np.random.choice(list(nodes))
                     nodes.add(j)
                     disconnect(i,j,adj)
                     connect(i,x,adj)
@@ -130,17 +131,17 @@ def construct_small_world_graph(N, p):
 #variable with success probability alpha*dt for every infected agent in its neighborhood
 #if infected, v becomes removed with probability beta*dt
 
-def vertex_transition(v, in_V, state):
+def vertex_transition(v, adj, state):
     if(state[v] == 0):
-        for x in in_V:
+        for x in adj[v]:
             if(state[x] == 1):
-                o = uniform(0,1)
+                o = np.random.rand()
                 #print o
                 if(o < alpha):
                     state[v] = 1
                     #print("yes")
     if(state[v] == 1):
-        o = uniform(0,1)
+        o = np.random.rand()
         if(o < beta):
             state[v] = 2 
     return state[v]
@@ -150,14 +151,6 @@ def vertex_transition(v, in_V, state):
 
 #Output: A list "all_neighborhoods" of arrays, with all_neighborhoods[v] representing
 #the neighborhood of vertex v
-
-def find_all_in_neighborhoods(adj):
-    all_neighborhoods = []
-    for v in range(N):
-        in_v = find_in_neighborhood(v,adj)
-        all_neighborhoods.append(in_v)
-        
-    return all_neighborhoods
 
 def average_centrality(adj):  
     N = len(adj)
@@ -175,26 +168,65 @@ def average_centrality(adj):
 
 #Output: Performs vertex_transition on each v in the graph. Updates state
 
-def dynamics(state, adj, in_neighborhoods):  
-    state_new = np.zeros(N)
-    for v in range(N) :
-        in_v = in_neighborhoods[v]
-        state_new[v] = vertex_transition(v, in_v, state) 
-        
-    state = state_new
-    return state,adj
+def dynamics(N,state, adj):
+    state_new = [vertex_transition(v,adj,state) for v in xrange(N)]
+    return state_new
 
-def main():
+def simulation(N=100,time=100,graph='random',delta=.5,w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
+
+    if graph == 'random':
+        adj = construct_random_graph(N,delta)
+    elif graph == 'scale free':
+        adj = construct_scale_free_graph(N,w)
+    else:
+        adj = construct_small_world_graph(N,p)
+    
+
+    global alpha,beta 
+    alpha = alpha_raw*dt 
+    beta = beta_raw*dt
+
+    state=np.zeros(N)
+    state[0]=1
+    
+    cost = 0   
+    for i in range(time):          
+        
+        counter_i = 0
+        counter_s = 0
+        counter_r = 0
+        for j in state:
+            if(j == 0):
+                counter_s = counter_s + 1  
+            if(j == 1):
+                counter_i = counter_i + 1           
+            if(j == 2):
+                counter_r = counter_r + 1  
+                #print counter_s , counter_i , counter_r
+            
+
+        state=dynamics(N,state,adj)
+        print state  
+
+    return 
+def main(N=100,graph='random'):
+    
+    graphs = ['random','scale free','small world']
+    if not graph in graphs:
+        raise TypeError('graph must be either random, scale free, or small world')
+
     thing = np.zeros((3,num_simulations))
     for ii in range(num_simulations):
         
-        adj, q = construct_random_graph(N,delta)
-        #adj , q = construct_scale_free_graph(N,w)
-        #adj , q = construct_small_world_graph(N, p)
-
-        in_neighborhoods = find_all_in_neighborhoods(adj)
+        if graph == 'random':
+            adj = construct_random_graph(N,delta)
+        elif graph == 'scale free':
+            adj = construct_scale_free_graph(N,w)
+        else:
+            adj = construct_small_world_graph(N, p)
         
         state = np.zeros(N)
+        
         state[0] = 1
         cost = 0   
         for i in range(time):          
@@ -210,8 +242,9 @@ def main():
                 if(j == 2):
                     counter_r = counter_r + 1  
                 #print counter_s , counter_i , counter_r
+            
             plots[:,i] = [counter_s , counter_i , counter_r]
-            dynamics(state,adj,in_neighborhoods)  
+            dynamics(state,adj)  
             for k in range(N):
                 cost = cost + plots[1,k]*dt
             
@@ -272,34 +305,20 @@ if __name__ == '__main__':
 
         #i = 1
     #r = 2
-
+    '''
     #random graph parameter
     delta = .037
     #scale free graph parameter
     w = 0.0
     #small-world parameter
-    p = .6
-
-    num_simulations = 1
-    dt = .01
-    time = 1000
-    sick = np.zeros(time)
-    N = 100 
-    state = np.zeros(N)
-    adj = np.zeros((N,N))
-    alpha_raw = 1.0
-    beta_raw = 1.0
-    alpha = alpha_raw*dt
-    beta = beta_raw*dt
+    p=.6
     plots = np.zeros((3,time))
     avg = np.zeros((3,time))
     avg_cost = 0
-    connect = 0
+    a_connect = 0
     nepidemic = 0
-
-    state[0] = 1
-
-    print construct_scale_free_graph(50, .9)
+    '''
+    simulation(N=20,graph='scale free',w=.1)
     #Main Program. Simulates num_simulation disease spreads, with newly generated graph
     #Every time.
     
