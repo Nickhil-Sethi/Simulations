@@ -20,21 +20,6 @@ simulation.
 
 #Output: Performs vertex_transition on each v in the graph. Updates state
 
-def vertex_transition(v, adj, state):
-    if(state[v] == 0):
-        for x in adj[v]:
-            if(state[x] == 1):
-                o = np.random.rand()
-                #print o
-                if(o < alpha):
-                    state[v] = 1
-                    #print("yes")
-    if(state[v] == 1):
-        o = np.random.rand()
-        if(o < beta):
-            state[v] = 2 
-    return state[v]
-    
 # what is more efficient?
 # iteration through 'active' set
 # or lookup in hash map
@@ -72,7 +57,6 @@ def dynamics_2():
             active.remove(i)
 
 
-
 def simulation(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
 
     if graph == 'random':
@@ -83,7 +67,7 @@ def simulation(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_ra
         adj = construct_small_world_graph(N,p)
     
 
-    global N, alpha, beta, active, state
+    global alpha, beta, active, state
     alpha = alpha_raw*dt 
     beta = beta_raw*dt
     active = set()
@@ -115,20 +99,11 @@ if __name__ == '__main__':
 
         #i = 1
     #r = 2
-    '''
-    #random graph parameter
-    delta = .037
-    #scale free graph parameter
-    w = 0.0
-    #small-world parameter
-    p=.6
-    plots = np.zeros((3,time))
-    avg = np.zeros((3,time))
-    avg_cost = 0
-    a_connect = 0
-    nepidemic = 0
-    '''
+    import time
+    t1 = time.time()
     simulation(N=20,graph='scale free',w=.1)
+    t2 = time.time
+    print t1 - t2
     #Main Program. Simulates num_simulation disease spreads, with newly generated graph
     #Every time.
     
