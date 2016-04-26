@@ -26,7 +26,7 @@ simulation.
 
 
 # this always iterates through N nodes
-def dynamics():
+def dynamics(N):
     for v in xrange(N):
         if state[v] == 1:
             for w in adj[v]:
@@ -39,7 +39,7 @@ def dynamics():
                 state[v] = 2
 
 # this only iterates through 'active nodes'
-def dynamics_2():
+def dynamics_2(N):
     # iteration through active nodes is O(n)
     for i in active:
         # action on neighborhood is O(m)
@@ -50,7 +50,7 @@ def dynamics_2():
                 if o < alpha:
                     state[w] = 1
                     active.add(w)
-        # removal is O(n)
+        # removal of i from is O(n)
         y = np.random.rand()
         if y < beta:
             state[i] = 2
@@ -58,6 +58,10 @@ def dynamics_2():
 
 
 def simulation(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
+    graphs = ['random','scale free','small world']
+
+    if not graph in graphs:
+        raise ValueError('graph must be type [random, scale free, small world]')
 
     if graph == 'random':
         adj = construct_random_graph(N,delta)
@@ -66,14 +70,13 @@ def simulation(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_ra
     else:
         adj = construct_small_world_graph(N,p)
     
-
     global alpha, beta, active, state
     alpha = alpha_raw*dt 
     beta = beta_raw*dt
     active = set()
     state=np.zeros(N)
     state[0]=1
-    
+
     cost = 0   
     for i in range(time):          
         
@@ -89,21 +92,18 @@ def simulation(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_ra
                 counter_r = counter_r + 1  
                 #print counter_s , counter_i , counter_r
             
-
-        state = dynamics(N,state,adj)
+        state = dynamics()
         print state  
 
     return
 
 if __name__ == '__main__':
 
-        #i = 1
-    #r = 2
     import time
     t1 = time.time()
     simulation(N=20,graph='scale free',w=.1)
     t2 = time.time
     print t1 - t2
-    #Main Program. Simulates num_simulation disease spreads, with newly generated graph
-    #Every time.
+
+
     
