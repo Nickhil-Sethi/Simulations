@@ -128,15 +128,19 @@ def simulation_2(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_
     return state
 
 if __name__ == '__main__':
+
+    sims = 2
     
     import time
     t1 = time.time()
-    simulation_1(N=2500,graph='small world',delta=.1)
+    for i in xrange(sims):
+        simulation_1(N=510,graph='random')
     t2 = time.time()
     print t2 - t1
 
     t3 = time.time()
-    simulation_2(N=2500,graph='small world',delta=.1)
+    for i in xrange(sims):
+        simulation_2(N=510,graph='random')
     t4 = time.time()
     print t4 - t3
 
