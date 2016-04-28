@@ -1,4 +1,6 @@
 import numpy as np
+import binary_tree
+
 def connect(i,j,adj,symmetric=True):
     if not i in adj:
         raise IndexError('i not in adjacency list')
@@ -7,7 +9,7 @@ def connect(i,j,adj,symmetric=True):
     
     adj[i].add(j)
     if symmetric:
-        adj[j].add(i)
+        adj[j].insert(i)
 
 def disconnect(i,j,adj,symmetric=True):
     if i not in adj:
@@ -25,7 +27,7 @@ def construct_random_graph(N, delta):
     nodes = range(N)
 
     for i in nodes:
-        adj_list[i] = set()
+        adj_list[i] = binary_tree.binary_tree()
     # for each node
     others = set(nodes)
     for i in nodes:

@@ -45,69 +45,51 @@ class binary_tree(object):
 		if not isinstance (root, binary_node):
 			raise TypeError('root must be type binary_node')
 		self.root = root
+		self.depth = 1
 
-	def BFS(self,req):
-		
-		if not isinstance(req, types.FunctionType):
-			raise TypeError('req must be type function')
 
-		q = queue.queue()
-		q.enqueue(queue.element(self.root))
+class binary_search_tree(binary_tree):
 
-		while not q.is_empty():
-			v=q.dequeue()
-			
-			if req(v.value.value):
-				return v.value			
+	def insert(self,v):
+		new_node = binary_node(v)
+		current = self.root
+
+		while len(current.children()) > 0:
+
+			if v >= current.value:
+				if current.right == None:
+					current.insert_right(new_node)
+				else:
+					current = current.right
 			else:
-				for child in v.value.children():
-					q.enqueue( queue.element( child ) )
+				if current.left == None:
+					current.insert_left(new_node)
+				else:
+					current = current.left
 
-		return None
+	def return_as_array(self):
 
-	def DFS(self,req):
-		if not isinstance(req, types.FunctionType):
-			raise TypeError('req must be type function')
-		
-		s = stack.stack()
-		s.push( stack.element(self.root) )
+		current = self.root
+		st = stack.stack()
+		st.push(current)
 
-		while not s.is_empty():
-			v=s.pop()
-			if req(v.value.value):
-				return v.value
+		keep_going = True
+		while keep_going:
+			if current.left:
+				current = current.left
+				st.push(current)
+			elif current.right:
+				current = current.right
+				st.push(current)
 			else:
-				for child in v.value.children():
-					s.push(stack.element(child) )
+				keep_going = False
 
-		return None
+		arr = []
+		while not st.is_empty():
+			w = st.pop()
+			arr.append(w.value)
 
-	def DFS_recursive(self,req,begin=None):
 
-		if not begin:
-			begin = self.root
-
-		if not isinstance(req,types.FunctionType):
-			raise TypeError('req must be type function')
-
-		if req(begin.value):
-			return True
-		else:
-			if begin.children():
-				
-				v = [0,0]
-				i = 0
-				
-				for child in begin.children(): 
-					v[i] = self.DFS_recursive(req,begin=child)
-					i+=1
-				
-				return max(v)
-			
-			else:
-				return False
-
-		return 
 
 if __name__=='__main__':
 
@@ -137,40 +119,6 @@ if __name__=='__main__':
 
 		return tree
 
-	def depth_first_print(tree):
-
-		s = stack.stack()
-		s.push(tree.root)
-
-		depth=1
-		
-		while not s.is_empty():
-
-			v=s.pop()
-			print "node depth {}, value {}".format(depth,v.value)
-			
-			depth -= 1
-			for child in v.children():
-				s.push(child)
-
-				depth+=1
-	def breadth_first_print(tree):
-
-		s = queue.queue()
-		s.enqueue(tree.root)
-
-		while not s.is_empty():
-			
-			v=s.dequeue()
-			print "node value {}".format(v.value)
-			
-			for child in v.children():
-				s.enqueue(child)
-
-	req = lambda x : x > .5 
-	tree= construct(40)
-
-	print type(req)
-	print breadth_first_print(tree)
-	b = tree.BFS(req)
-	print b.value
+	v = binary_node(4)
+	t = binary_search_tree(v)
+	print binary_search_tree
