@@ -10,17 +10,11 @@ from network import *
 import queue
 
 '''
-These are two functions that are used both in constructing random graphs, and running our
-simulation.
+
+simulation_2 is far faster than simulation_1, by using a queue data structure to manage the infected 
+nodes.
 
 '''
-
-#Output: Performs vertex_transition on each v in the graph. Updates state
-
-# what is more efficient?
-# iteration through 'active' set
-# or lookup in hash map
-
 
 # this always iterates through N nodes
 def dynamics(N,state,adj):
@@ -85,36 +79,54 @@ def simulation_1(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_
 
     return state
 
-def simulation_2(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
+def simulation_2(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
+
+    # sanity checks
     graphs = ['random','scale free','small world']
 
     if not graph in graphs:
         raise ValueError('graph must be type [random, scale free, small world]')
 
-    global alpha, beta
+    if not 0 <= delta <= 1:
+        raise ValueError('delta must be in [0,1]')
+    if not 0 <= w <= 1:
+        raise ValueError('w must be in [0,1]')
+    if not 0 <= p <= 1:
+        raise ValueError('p must be in [0,1]')
+
+
+    # constructing network
+    if graph == 'random':
+        adj = construct_random_graph(N,delta)
+    elif graph == 'scale free':
+        adj = construct_scale_free_graph(N,w)
+    else:
+        adj = construct_small_world_graph(N,p)
+
+    # state transition probabilities for nodes
+    # infected node infects susceptible node with probability 'alpha_raw' in one unit of time 
+    # infected node becomes 'removed' node with probability 'beta_raw' in one unit of time
     alpha = alpha_raw*dt 
     beta = beta_raw*dt
     
     state=np.zeros(N)
     state[0]=1
 
-    if graph == 'random':
-        adj = construct_random_graph(N, delta)
-    elif graph == 'scale free':
-        adj = construct_scale_free_graph(N,w)
-    else:
-        adj = construct_small_world_graph(N,p)
-
+    # 'active' queue manages infected nodes
     active = queue.queue()
     active.enqueue(0)
 
+    # main loop
     timer = 0
     while not active.is_empty() and timer < time:
+        # dequeue an infected node
         v = active.dequeue()
+        # action on neighborhood(v)
         for w in adj[v]:
             if state[w] == 0:
+                # neighbors of v may become active
                 o = np.random.rand()
-                if 0 < alpha:
+                if o < alpha:
                     state[w] = 1
                     active.enqueue(w)
         y = np.random.rand()
@@ -128,21 +140,23 @@ def simulation_2(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_
     return state
 
 if __name__ == '__main__':
-
-    sims = 2
-    
     import time
+    sims = 2
+    '''
     t1 = time.time()
     for i in xrange(sims):
         simulation_1(N=510,graph='random')
     t2 = time.time()
     print t2 - t1
-
+    
     t3 = time.time()
     for i in xrange(sims):
-        simulation_2(N=510,graph='random')
+        print simulation_2(N=510,graph='random')
     t4 = time.time()
     print t4 - t3
+    '''
+    print simulation_2(N=350,time=5000,graph='random')
+
 
 
     
