@@ -50,7 +50,30 @@ class binary_tree(object):
 		self.size = 1
 		self.depth = 1
 
+	def return_as_array(self):
 
+		arr = []
+		st = stack.stack()
+
+		node = self.root
+		st.push(node)
+
+
+		while not st.is_empty():
+			if node.left:
+				node = node.left
+				st.push(node)
+			else:
+				while not st.is_empty():
+					node = st.pop()
+					arr.append(node.value)
+					if node.right:
+						node = node.right
+						st.push(node)
+						break
+
+		return arr
+# binary search tree on real numbers
 class binary_search_tree(binary_tree):
 
 	def insert(self,v):
@@ -79,34 +102,13 @@ class binary_search_tree(binary_tree):
 
 		self.size += 1
 
-	def return_as_array(self):
-
-		current = self.root
-		st = stack.stack()
-		st.push(current)
-
-		keep_going = True
-		while keep_going:
-			if current.left:
-				current = current.left
-				st.push(current)
-			elif current.right:
-				current = current.right
-				st.push(current)
-			else:
-				keep_going = False
-
-		arr = []
-		while not st.is_empty():
-			w = st.pop()
-			arr.append(w.value)
-
-		return arr
+	
 
 if __name__=='__main__':
 
 	v = binary_node(4)
 	t = binary_search_tree(v)
-	for i in xrange(10):
-		t.insert(np.random.randint(50))
+	for i in xrange(20):
+		t.insert(np.random.randint(20))
+
 	print t.return_as_array()

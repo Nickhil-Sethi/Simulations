@@ -23,6 +23,9 @@ class stack(object):
 		self.top=element_a
 		self.size += 1
 
+	def peek(self):
+		return self.top.value
+
 	def pop(self):
 		if not self.is_empty():
 			popped = self.top.value

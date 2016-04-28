@@ -23,11 +23,11 @@ def disconnect(i,j,adj,symmetric=True):
 
 def construct_random_graph(N, delta):
 
-    adj_list = {}
+    adj_trees = {}
     nodes = range(N)
 
     for i in nodes:
-        adj_list[i] = binary_tree.binary_tree()
+        adj_trees[i] = binary_tree.binary_search_tree(binary_tree.binary_node(i))
     # for each node
     others = set(nodes)
     for i in nodes:
@@ -36,9 +36,10 @@ def construct_random_graph(N, delta):
         for j in list(nodes):
             # if random number ~U[0,1] < delta
             if np.random.rand() < delta:
-                connect(i,j,adj_list)
+                connect(i,j,adj_trees)
         others.add(i)
 
+    adj_list = [ adj_trees[i].return_as_array() for i in xrange(N)]
     return adj_list
 
 #Constructs scale free graph
@@ -133,3 +134,6 @@ def average_centrality(adj):
     return avg
 
 #Input: An array state of the states
+if __name__=='__main__':
+    adj = construct_random_graph(5,.3)
+    print adj
