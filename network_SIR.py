@@ -7,10 +7,7 @@ Created on Tue Feb 24 15:48:10 2015
 #from graph_tool.all import *
 import numpy as np
 from network import *
-#import matplotlib.pyplot as plt
-#close('all')
-#s = 0 
-
+import queue
 
 '''
 These are two functions that are used both in constructing random graphs, and running our
@@ -26,42 +23,55 @@ simulation.
 
 
 # this always iterates through N nodes
-def dynamics(N):
+def dynamics(N,state,adj):
     for v in xrange(N):
         if state[v] == 1:
             for w in adj[v]:
-                if state[v] == 0:
+                if state[w] == 0:
                     o = np.random.rand()
                     if o < alpha:
                         state[w] = 1
             y = np.random.rand()
             if y < beta:
                 state[v] = 2
+    return state
 
 # this only iterates through 'active nodes'
-def dynamics_2(N):
+def dynamics_2(N,state,active,adj,remove_stack):
     # iteration through active nodes is O(n)
-    for i in active:
+
+    L = active.size
+    counter = 0
+    while not active.is_empty() and counter < L:
+        counter += 1
+        v = active.dequeue()
         # action on neighborhood is O(m)
-        for w in adj[i]:
+        for w in adj[v]:
             # O(1)
             if state[w] == 0:
                 o = np.random.rand()
                 if o < alpha:
                     state[w] = 1
-                    active.add(w)
+                    active.enqueue(w)        
         # removal of i from is O(n)
         y = np.random.rand()
         if y < beta:
-            state[i] = 2
-            active.remove(i)
+            state[v] = 2
+        else:
+            active.enqueue(v)
+    return state
 
-
-def simulation(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
+def simulation_1(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
     graphs = ['random','scale free','small world']
 
     if not graph in graphs:
         raise ValueError('graph must be type [random, scale free, small world]')
+
+    global alpha, beta
+    alpha = alpha_raw*dt 
+    beta = beta_raw*dt
+    state=np.zeros(N)
+    state[0]=1
 
     if graph == 'random':
         adj = construct_random_graph(N,delta)
@@ -69,41 +79,66 @@ def simulation(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_ra
         adj = construct_scale_free_graph(N,w)
     else:
         adj = construct_small_world_graph(N,p)
-    
-    global alpha, beta, active, state
+
+    for i in range(time):                      
+        state=dynamics(N,state,adj)
+
+    return state
+
+def simulation_2(N=100,time=100,graph='random',delta=.5, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
+    graphs = ['random','scale free','small world']
+
+    if not graph in graphs:
+        raise ValueError('graph must be type [random, scale free, small world]')
+
+    global alpha, beta
     alpha = alpha_raw*dt 
     beta = beta_raw*dt
-    active = set()
+    
     state=np.zeros(N)
     state[0]=1
 
-    cost = 0   
-    for i in range(time):          
-        
-        counter_i = 0
-        counter_s = 0
-        counter_r = 0
-        for j in state:
-            if(j == 0):
-                counter_s = counter_s + 1  
-            if(j == 1):
-                counter_i = counter_i + 1           
-            if(j == 2):
-                counter_r = counter_r + 1  
-                #print counter_s , counter_i , counter_r
-            
-        state = dynamics()
-        print state  
+    if graph == 'random':
+        adj = construct_random_graph(N, delta)
+    elif graph == 'scale free':
+        adj = construct_scale_free_graph(N,w)
+    else:
+        adj = construct_small_world_graph(N,p)
 
-    return
+    active = queue.queue()
+    active.enqueue(0)
+
+    timer = 0
+    while not active.is_empty() and timer < time:
+        v = active.dequeue()
+        for w in adj[v]:
+            if state[w] == 0:
+                o = np.random.rand()
+                if 0 < alpha:
+                    state[w] = 1
+                    active.enqueue(w)
+        y = np.random.rand()
+        if y < beta:
+            state[v] = 2
+        else:
+            active.enqueue(v)
+
+        timer += 1
+        
+    return state
 
 if __name__ == '__main__':
-
+    
     import time
     t1 = time.time()
-    simulation(N=20,graph='scale free',w=.1)
-    t2 = time.time
-    print t1 - t2
+    simulation_1(N=2500,graph='small world',delta=.1)
+    t2 = time.time()
+    print t2 - t1
+
+    t3 = time.time()
+    simulation_2(N=2500,graph='small world',delta=.1)
+    t4 = time.time()
+    print t4 - t3
 
 
     
