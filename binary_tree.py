@@ -26,6 +26,7 @@ class binary_node(object):
 				raise TypeError('insert_left takes input type binary_node; node has left child anyway')
 		if self.left != None:
 			raise ValueError('node already has left child node')
+		
 		self.left = node
 
 	def insert_right(self,node):
@@ -36,6 +37,7 @@ class binary_node(object):
 				raise TypeError('insert_right takes input type binary_node; node has right child anyway')
 		if self.right != None:
 			raise ValueError('node already has right child node')
+		
 		self.right = node
 
 
@@ -45,6 +47,7 @@ class binary_tree(object):
 		if not isinstance (root, binary_node):
 			raise TypeError('root must be type binary_node')
 		self.root = root
+		self.size = 1
 		self.depth = 1
 
 
@@ -54,18 +57,27 @@ class binary_search_tree(binary_tree):
 		new_node = binary_node(v)
 		current = self.root
 
-		while len(current.children()) > 0:
+		keep_going = True
+		while keep_going:
+
+			if len(current.children()) == 0:
+				keep_going = False
 
 			if v >= current.value:
 				if current.right == None:
 					current.insert_right(new_node)
+					keep_going = False
 				else:
 					current = current.right
 			else:
 				if current.left == None:
 					current.insert_left(new_node)
+					keep_going = False
 				else:
 					current = current.left
+			
+
+		self.size += 1
 
 	def return_as_array(self):
 
@@ -89,36 +101,12 @@ class binary_search_tree(binary_tree):
 			w = st.pop()
 			arr.append(w.value)
 
-
+		return arr
 
 if __name__=='__main__':
 
-	def construct(max_iter):
-		
-		root = binary_node(np.random.rand())
-		tree = binary_tree(root)
-
-		s = stack.stack()
-		s.push(root)
-		iter=0
-		
-		while not s.is_empty() and iter < max_iter:
-			v=s.pop()
-			
-			l=binary_node(np.random.rand())
-			r=binary_node(np.random.rand())
-
-			v.insert_left(l)
-			v.insert_right(r)
-
-			for child in v.children():
-				if child != None:
-					s.push(child)
-
-			iter += 1
-
-		return tree
-
 	v = binary_node(4)
 	t = binary_search_tree(v)
-	print binary_search_tree
+	for i in xrange(10):
+		t.insert(np.random.randint(50))
+	print t.return_as_array()

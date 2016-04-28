@@ -7,7 +7,7 @@ def connect(i,j,adj,symmetric=True):
     if not j in adj:
         raise IndexError('j not in adjacency list')
     
-    adj[i].add(j)
+    adj[i].insert(j)
     if symmetric:
         adj[j].insert(i)
 
