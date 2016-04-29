@@ -65,8 +65,7 @@ def construct_scale_free_graph(N, w):
     for i in xrange(N):
         adj[i] = binary_tree.binary_search_tree(binary_tree.binary_node(i))
     
-    adj[0].insert(1)
-    adj[1].insert(0)
+    connect(0,1,adj)
 
     for v in xrange(2,N):
 
@@ -93,7 +92,7 @@ def construct_scale_free_graph(N, w):
 def construct_small_world_graph(N, p):
     adj = {}
     for i in xrange(N):
-        adj[i] = set()
+        adj[i] = binary_tree.binary_search_tree(binary_tree.binary_node(i))
 
     for i in xrange(N):
         connect(i, (i-1)%N, adj)
@@ -104,7 +103,7 @@ def construct_small_world_graph(N, p):
     nodes = set(range(N))
     for i in range(N):
         for j in range(i+1,N):
-            if j in adj[i]:
+            if j in adj[i].return_as_array():
                 o = np.random.rand()
                 if(o < p):
                     nodes.remove(j)

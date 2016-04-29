@@ -145,21 +145,20 @@ if __name__ == '__main__':
 
     t1 = time.time()
     for i in xrange(sims):
-        simulation_1(N=800,graph='random')
+        simulation_1(N=800,graph='small world')
     t2 = time.time()
     print t2 - t1
     
     t3 = time.time()
     for i in xrange(sims):
-        simulation_2(N=800,graph='random')
+        simulation_2(N=800,graph='small world')
     t4 = time.time()
     print t4 - t3
     '''
     t1 = time.time()
-    simulation_2(N=840,time=500,graph='random')
+    simulation_2(N=40,time=500,graph='random')
     t2 = time.time()
     print t2-t1
     '''
-
 
     
