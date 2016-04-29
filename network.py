@@ -7,9 +7,12 @@ def connect(i,j,adj,symmetric=True):
     if not j in adj:
         raise IndexError('j not in adjacency list')
     
+
+    # search first if this is in there
     adj[i].insert(j)
     if symmetric:
-        adj[j].insert(i)
+        if adj[j].binary_search(i) == None:
+            adj[j].insert(i)
 
 def disconnect(i,j,adj,symmetric=True):
     if i not in adj:
@@ -29,15 +32,19 @@ def construct_random_graph(N, delta):
     for i in nodes:
         adj_trees[i] = binary_tree.binary_search_tree(binary_tree.binary_node(i))
     # for each node
-    others = set(nodes)
+    started = False
     for i in nodes:
         # can be more space efficient?
-        others.remove(i)
-        for j in list(nodes):
-            # if random number ~U[0,1] < delta
-            if np.random.rand() < delta:
-                connect(i,j,adj_trees)
-        others.add(i)
+        for j in nodes:
+            if j != i:
+                # if random number ~U[0,1] < delta
+                if np.random.rand() < delta:
+                    if started == False:
+                        adj_trees[i] = binary_tree.binary_search_tree(binary_tree.binary_node(j))
+                        started = True
+                    else:
+                        connect(i,j,adj_trees)
+        started = False
 
     adj_list = [ adj_trees[i].return_as_array() for i in xrange(N)]
     return adj_list
@@ -56,10 +63,10 @@ def construct_scale_free_graph(N, w):
 
     adj = {}
     for i in xrange(N):
-        adj[i] = set()
+        adj[i] = binary_tree.binary_search_tree(binary_tree.binary_node(i))
     
-    adj[0].add(1)
-    adj[1].add(0)
+    adj[0].insert(1)
+    adj[1].insert(0)
 
     for v in xrange(2,N):
 
@@ -69,13 +76,14 @@ def construct_scale_free_graph(N, w):
         x = np.random.choice(range(v), size = None , replace = True, p = X)
         connect(v,x,adj)
 
-        l = [ len(adj[i]) for i in xrange(v+1) ]
+        l = [ len(adj[i].return_as_array())-1 for i in xrange(v+1) ]
         
         # update Preferential distribution
         total = sum(l)
         Pr = [float(l[i])/float(total) for i in xrange(v+1)]
 
-    return adj
+    adj_list = [ adj[i].return_as_array() for i in xrange(N)]
+    return adj_list
     
 #Input: Number of vertices N, parameter p
 #Constructs graph by beginning with circular ring on which every vertex is connected
@@ -135,5 +143,8 @@ def average_centrality(adj):
 
 #Input: An array state of the states
 if __name__=='__main__':
-    adj = construct_random_graph(5,.3)
-    print adj
+    import time
+    t1 = time.time()
+    adj = construct_random_graph(100,.5)
+    t2 = time.time()
+    print t2-t1

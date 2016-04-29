@@ -98,17 +98,31 @@ class binary_search_tree(binary_tree):
 					keep_going = False
 				else:
 					current = current.left
-			
-
 		self.size += 1
 
-	
+	def binary_search(self, value, current=None):
+		if current == None:
+			current = self.root
+		
+		if current.value == value:
+			return current
+		else:
+			if value < current.value:
+				if current.left:
+					return self.binary_search(value,current.left)
+				else:
+					return None
+			else:
+				if current.right:
+					return self.binary_search(value,current.right)
+				else:
+					return None
 
 if __name__=='__main__':
-
-	v = binary_node(4)
+	k = 20
+	v = binary_node(k)
 	t = binary_search_tree(v)
-	for i in xrange(20):
-		t.insert(np.random.randint(20))
+	for i in xrange(k,k+20):
+		t.insert(i)
 
 	print t.return_as_array()

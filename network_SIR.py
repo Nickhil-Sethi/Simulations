@@ -142,24 +142,24 @@ def simulation_2(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_
 if __name__ == '__main__':
     import time
     sims = 2
-    '''
+
     t1 = time.time()
     for i in xrange(sims):
-        simulation_1(N=80,graph='random')
+        simulation_1(N=800,graph='random')
     t2 = time.time()
     print t2 - t1
     
     t3 = time.time()
     for i in xrange(sims):
-        simulation_2(N=80,graph='random')
+        simulation_2(N=800,graph='random')
     t4 = time.time()
     print t4 - t3
     '''
     t1 = time.time()
-    simulation_2(N=350,time=5000,graph='random')
+    simulation_2(N=840,time=500,graph='random')
     t2 = time.time()
     print t2-t1
-
+    '''
 
 
     
