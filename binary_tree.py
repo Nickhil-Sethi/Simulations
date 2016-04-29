@@ -1,7 +1,22 @@
+'''
+
+binary_tree module.
+contains functions related to insertion, deletion, search.
+
+@author: Nickhil-Sethi
+
+'''
+
+
+
 import stack
 import queue
 import numpy as np
 import types
+
+
+
+# prototype of binary node object
 
 class binary_node(object):
 	def __init__(self,value):
@@ -41,14 +56,33 @@ class binary_node(object):
 		self.right = node
 
 
+
+
+# protype of binary tree object
+
 class binary_tree(object):
 	
-	def __init__(self,root):
-		if not isinstance (root, binary_node):
+	def __init__(self,root=None):
+
+		if root == None:
+			self.root = root
+			self.depth = 0
+			self.size = 0
+		elif not isinstance (root, binary_node):
 			raise TypeError('root must be type binary_node')
-		self.root = root
-		self.size = 1
-		self.depth = 1
+		else:
+			self.root = root
+			self.size = 1
+			self.depth = 1
+
+
+	# boolean to check if tree is null
+
+	def is_empty(self):
+		return (self.size == 0)
+
+	# returns tree as an array
+	# elements sorted in order of increasing value
 
 	def return_as_array(self):
 
@@ -58,6 +92,7 @@ class binary_tree(object):
 		node = self.root
 		st.push(node)
 
+		# continue along left line
 
 		while not st.is_empty():
 			if node.left:
@@ -73,10 +108,20 @@ class binary_tree(object):
 						break
 
 		return arr
-# binary search tree on real numbers
+
+
+
+
+# prototype of binary search tree 
+# nodes must be real valued
+
 class binary_search_tree(binary_tree):
 
 	def insert(self,v):
+		if self.is_empty():
+			self.root = binary_node(v)
+			return
+		
 		new_node = binary_node(v)
 		current = self.root
 
@@ -100,7 +145,13 @@ class binary_search_tree(binary_tree):
 					current = current.left
 		self.size += 1
 
+	# returns node-object if node.value == value
+	# else returns None
 	def binary_search(self, value, current=None):
+
+		if self.is_empty():
+			return None
+
 		if current == None:
 			current = self.root
 		
@@ -118,11 +169,17 @@ class binary_search_tree(binary_tree):
 				else:
 					return None
 
+
+
+
 if __name__=='__main__':
+
+
+
 	k = 20
 	v = binary_node(k)
 	t = binary_search_tree(v)
-	for i in xrange(k,k+20):
+	for i in xrange(k+1,k+20):
 		t.insert(i)
 
 	print t.return_as_array()

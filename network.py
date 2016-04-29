@@ -30,7 +30,7 @@ def construct_random_graph(N, delta):
     nodes = range(N)
 
     for i in nodes:
-        adj_trees[i] = binary_tree.binary_search_tree(binary_tree.binary_node(i))
+        adj_trees[i] = binary_tree.binary_search_tree()
     # for each node
     started = False
     for i in nodes:
@@ -39,12 +39,7 @@ def construct_random_graph(N, delta):
             if j != i:
                 # if random number ~U[0,1] < delta
                 if np.random.rand() < delta:
-                    if started == False:
-                        adj_trees[i] = binary_tree.binary_search_tree(binary_tree.binary_node(j))
-                        started = True
-                    else:
-                        connect(i,j,adj_trees)
-        started = False
+                    connect(i,j,adj_trees)
 
     adj_list = [ adj_trees[i].return_as_array() for i in xrange(N)]
     return adj_list

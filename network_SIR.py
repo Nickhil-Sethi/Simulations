@@ -1,22 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb 24 15:48:10 2015
-
 @author: Nickhil_Sethi
+
+SIR simulation on network
+
 """
 #from graph_tool.all import *
 import numpy as np
 from network import *
 import queue
 
-'''
-
-simulation_2 is far faster than simulation_1, by using a queue data structure to manage the infected 
-nodes.
-
-'''
-
-def simulation_2(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
+def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
 
     # sanity checks
     graphs = ['random','scale free','small world']
@@ -82,7 +76,7 @@ if __name__ == '__main__':
 
     t3 = time.time()
     for i in xrange(sims):
-        simulation_2(N=800,graph='small world')
+        simulation(N=80,graph='random')
     t4 = time.time()
     print t4 - t3
 
