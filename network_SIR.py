@@ -28,7 +28,8 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
 
     # constructing network
     if graph == 'random':
-        adj = construct_random_graph(N,delta)
+        G = random_graph(N,delta)
+        adj = G.construct()
     elif graph == 'scale free':
         adj = construct_scale_free_graph(N,w)
     else:

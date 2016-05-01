@@ -1,48 +1,78 @@
 import numpy as np
 import binary_tree
 
-def connect(i,j,adj,symmetric=True):
-    if not i in adj:
-        raise IndexError('i not in adjacency list')
-    if not j in adj:
-        raise IndexError('j not in adjacency list')
-    
+class graph(object):
+    def __init__(self,nodes=set(),directed=True):
+        
+        self.nodes = nodes
+        self.N = len(self.nodes)
+        self.directed = directed
 
-    # search first if this is in there
-    adj[i].insert(j)
-    if symmetric:
-        if adj[j].binary_search(i) == None:
-            adj[j].insert(i)
+        self.adj_trees = {}
+        for n in self.nodes:
+            self.adj_trees[n] = binary_tree.binary_search_tree()
 
-def disconnect(i,j,adj,symmetric=True):
-    if i not in adj:
-        raise IndexError('i not in adjacency list')
-    if j not in adj:
-        raise IndexError('j not in adjacency list')
-    
-    adj[i].remove(j)
-    if symmetric:
-        adj[j].remove(i)
+    def connect(self,i,j,symmetric=True):
+        if not i in self.nodes:
+            raise IndexError('i not in adjacency list')
+        if not j in self.nodes:
+            raise IndexError('j not in adjacency list')
 
-def construct_random_graph(N, delta):
+        # search first if this is in there
+        self.adj_trees[i].insert(j)
+        if symmetric:
+            if self.adj_trees[j].binary_search(i) == None:
+                self.adj_trees[j].insert(i)
 
-    adj_trees = {}
-    nodes = range(N)
+    def disconnect(self,i,j,symmetric=True):
+        if i not in adj:
+            raise IndexError('i not in adjacency list')
+        if j not in adj:
+            raise IndexError('j not in adjacency list')
+        
+        adj[i].remove(j)
+        if symmetric:
+            adj[j].remove(i)
 
-    for i in nodes:
-        adj_trees[i] = binary_tree.binary_search_tree()
-    # for each node
-    started = False
-    for i in nodes:
-        # can be more space efficient?
-        for j in nodes:
-            if j != i:
-                # if random number ~U[0,1] < delta
-                if np.random.rand() < delta:
-                    connect(i,j,adj_trees)
+class random_graph(graph):
+    def __init__(self,N,delta,directed=True):
+        graph.__init__(N,directed):
+        self.delta = delta
 
-    adj_list = [ adj_trees[i].return_as_array() for i in xrange(N)]
-    return adj_list
+    def construct(self):
+
+        # for each node
+        started = False
+        for i in self.nodes:
+            # can be more space efficient?
+            for j in self.nodes:
+                # nodes are not self connected
+                if j != i:
+                    # if random number ~U[0,1] < delta
+                    if np.random.rand() < self.delta:
+                        self.connect(i,j,adj_trees)
+
+        adj_list = [ adj_trees[i].return_as_array() for i in xrange(self.N) ]
+        return adj_list
+
+    def parallel_construct(self,threads=2):
+
+        # construct two graphs of size ~ N/2 
+        # join two graphs by iterating
+
+        # g1 and g2 must be randomly sampled 
+
+        adj = g1_adj + g2_adj
+
+        # return two networks to main thread 
+        # and connect them via standard procedure
+        for n in G1:
+            for m in G2:
+                o = np.random.rand()
+                if o < delta:
+                    connect(m,n,adj)
+
+        return adj_list
 
 #Constructs scale free graph
 #Input: number of vertices, parameter omega
@@ -58,7 +88,7 @@ def construct_scale_free_graph(N, w):
 
     adj = {}
     for i in xrange(N):
-        adj[i] = binary_tree.binary_search_tree(binary_tree.binary_node(i))
+        adj[i] = binary_tree.binary_search_tree()
     
     connect(0,1,adj)
 
@@ -70,7 +100,7 @@ def construct_scale_free_graph(N, w):
         x = np.random.choice(range(v), size = None , replace = True, p = X)
         connect(v,x,adj)
 
-        l = [ len(adj[i].return_as_array())-1 for i in xrange(v+1) ]
+        l = [ len(adj[i].return_as_array()) for i in xrange(v+1) ]
         
         # update Preferential distribution
         total = sum(l)
@@ -139,6 +169,6 @@ def average_centrality(adj):
 if __name__=='__main__':
     import time
     t1 = time.time()
-    adj = construct_random_graph(100,.5)
+    adj = construct_random_graph(1000,.5)
     t2 = time.time()
     print t2-t1
