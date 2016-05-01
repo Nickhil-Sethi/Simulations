@@ -1,61 +1,79 @@
 import numpy as np
 import binary_tree
 
+class node(object):
+    def __init__(self,value=None):
+        self.value = value
+        self.adj_tree = binary_tree.binary_search_tree()
+
 class graph(object):
-    def __init__(self,nodes=set(),directed=True):
+    def __init__(self,nodes={},directed=False,loops=False):
         
+        # nodes map integers to node objects
         self.nodes = nodes
         self.N = len(self.nodes)
         self.directed = directed
 
-        self.adj_trees = {}
-        for n in self.nodes:
-            self.adj_trees[n] = binary_tree.binary_search_tree()
+        # adjacency tree data 
+        self.adj_tree = [self.nodes[i].adj_tree for i in xrange(self.N)]
 
-    def connect(self,i,j,symmetric=True):
+    # connect node i to node j
+    def connect(self,i,j):
         if not i in self.nodes:
             raise IndexError('i not in adjacency list')
         if not j in self.nodes:
             raise IndexError('j not in adjacency list')
 
         # search first if this is in there
-        self.adj_trees[i].insert(j)
-        if symmetric:
-            if self.adj_trees[j].binary_search(i) == None:
-                self.adj_trees[j].insert(i)
+        self.adj_tree[i].insert(j)
+        if not self.directed:
+            if self.adj_tree[j].binary_search(i) == None:
+                self.adj_tree[j].insert(i)
 
-    def disconnect(self,i,j,symmetric=True):
+    def disconnect(self,i,j):
         if i not in adj:
             raise IndexError('i not in adjacency list')
         if j not in adj:
             raise IndexError('j not in adjacency list')
         
         adj[i].remove(j)
-        if symmetric:
+        if self.directed:
             adj[j].remove(i)
 
 class random_graph(graph):
-    def __init__(self,N,delta,directed=True):
-        graph.__init__(N,directed):
+
+    def __init__(self,nodes=set(),delta=.01,directed=False):
+        graph.__init__(self,nodes,directed)
         self.delta = delta
 
     def construct(self):
-
-        # for each node
-        started = False
-        for i in self.nodes:
-            # can be more space efficient?
-            for j in self.nodes:
-                # nodes are not self connected
-                if j != i:
-                    # if random number ~U[0,1] < delta
+        # faster iteration loop if graph is undirected
+        if not self.directed:
+            for i in xrange(self.N):
+                for j in xrange(i+1,self.N):
                     if np.random.rand() < self.delta:
-                        self.connect(i,j,adj_trees)
+                        self.connect(self.nodes[i],self.nodes[j])
+        # else 
+        else:
+            # for each node
+            for i in self.nodes:
+                # can be more space efficient?
+                for j in self.nodes:
+                    # nodes are not self connected
+                    if loops:
+                        if np.random.rand() < self.delta:
+                            self.connect(i,j)
+                    elif not loops and j != i:
+                        # if random number ~U[0,1] < delta
+                        if np.random.rand() < self.delta:
+                            self.connect(i,j)
 
-        adj_list = [ adj_trees[i].return_as_array() for i in xrange(self.N) ]
+        adj_list = [ self.adj_tree[i].return_as_array() for i in xrange(self.N) ]
         return adj_list
 
     def parallel_construct(self,threads=2):
+
+        # T(N) = 2*T(N/2) + (n**2)/4
 
         # construct two graphs of size ~ N/2 
         # join two graphs by iterating
@@ -140,35 +158,14 @@ def construct_small_world_graph(N, p):
     return adj
 
 
-#Input: A fixed vertex v, in_V the in-neighborhood of V, 
-#state the array representing the states (S, I ,R) of each vertex
-
-#Output: Updates state based on neighborhood of v. If v succeptible, draws bernoulli random
-#variable with success probability alpha*dt for every infected agent in its neighborhood
-#if infected, v becomes removed with probability beta*dt
-
-
-#Input: An (N x N) adjacency matrix
-
-#Output: A list "all_neighborhoods" of arrays, with all_neighborhoods[v] representing
-#the neighborhood of vertex v
-
-def average_centrality(adj):  
-    N = len(adj)
-    l = np.zeros(N)
-    neighborhoods = find_all_in_neighborhoods(adj)
-    for i in range(N):
-        l[i] = len(neighborhoods[i])
-        
-    total = sum(l)
-    avg = float(total)/float(N)
-    
-    return avg
-
 #Input: An array state of the states
 if __name__=='__main__':
     import time
+    
+    N = 8
     t1 = time.time()
-    adj = construct_random_graph(1000,.5)
+    nodes = [node(i) for i in xrange(N)]
+    G = random_graph(nodes,delta=.1)
+    G.construct()
     t2 = time.time()
     print t2-t1
