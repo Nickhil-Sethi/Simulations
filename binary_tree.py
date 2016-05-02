@@ -3,6 +3,8 @@
 binary_tree module.
 contains functions related to insertion, deletion, search.
 
+nodes must be real valued
+
 @author: Nickhil-Sethi
 
 '''
@@ -85,6 +87,8 @@ class binary_tree(object):
 	# elements sorted in order of increasing value
 
 	def return_as_array(self):
+		if self.is_empty():
+			return []
 
 		arr = []
 		st = stack.stack()
@@ -109,6 +113,18 @@ class binary_tree(object):
 
 		return arr
 
+	def df_print(self):
+		q = queue.queue()
+		q.enqueue(self.root)
+
+		while not q.is_empty():
+			v = q.dequeue()
+			print v.value
+			for w in v.children():
+				q.enqueue(w)
+
+
+
 
 
 
@@ -120,6 +136,7 @@ class binary_search_tree(binary_tree):
 	def insert(self,v):
 		if self.is_empty():
 			self.root = binary_node(v)
+			self.size += 1
 			return
 		
 		new_node = binary_node(v)
@@ -128,6 +145,7 @@ class binary_search_tree(binary_tree):
 		keep_going = True
 		while keep_going:
 
+			# necessary? 
 			if len(current.children()) == 0:
 				keep_going = False
 
@@ -143,6 +161,7 @@ class binary_search_tree(binary_tree):
 					keep_going = False
 				else:
 					current = current.left
+		
 		self.size += 1
 
 	# returns node-object if node.value == value
@@ -173,13 +192,5 @@ class binary_search_tree(binary_tree):
 
 
 if __name__=='__main__':
-
-
-
-	k = 20
-	v = binary_node(k)
-	t = binary_search_tree(v)
-	for i in xrange(k+1,k+20):
-		t.insert(i)
-
-	print t.return_as_array()
+	b = binary_search_tree()
+	

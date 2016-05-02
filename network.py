@@ -1,40 +1,61 @@
+'''
+
+network module.
+
+nodes must be real valued
+
+@author: Nickhil-Sethi
+
+'''
+
 import numpy as np
 import binary_tree
 
 class node(object):
-    def __init__(self,value=None):
-        self.value = value
+    def __init__(self,value,index):
+        self.value = value 
+        self.index = index
         self.adj_tree = binary_tree.binary_search_tree()
 
 class graph(object):
-    def __init__(self,nodes={},directed=False,loops=False):
+    def __init__(self,node_map={},directed=False,loops=False):
         
-        # nodes map integers to node objects
-        self.nodes = nodes
-        self.N = len(self.nodes)
+        # maps node indices to node values
+        self.node_map = node_map
+
+        # number of nodes
+        self.N = len(self.node_map)
+
+        # boolean true if graph is directed
         self.directed = directed
 
-        # adjacency tree data 
-        self.adj_tree = [self.nodes[i].adj_tree for i in xrange(self.N)]
+        # this way? or with node object?
+        self.node = {}
+        self.indices = []
+        for n in self.node_map:
+            self.indices.append(n)
+            self.node[n] = node(value=self.node_map[n],index=n)
 
     # connect node i to node j
     def connect(self,i,j):
-        if not i in self.nodes:
-            raise IndexError('i not in adjacency list')
-        if not j in self.nodes:
-            raise IndexError('j not in adjacency list')
+        if not i in self.node_map:
+            raise IndexError(i ,' not in adjacency list')
+        if not j in self.node_map:
+            raise IndexError(j ,' not in adjacency list')
 
         # search first if this is in there
-        self.adj_tree[i].insert(j)
+        if not self.node[i].adj_tree.binary_search( j ):
+            self.node[i].adj_tree.insert( j )
+
         if not self.directed:
-            if self.adj_tree[j].binary_search(i) == None:
-                self.adj_tree[j].insert(i)
+            if self.node[j].adj_tree.binary_search( i ) == None:
+                self.node[j].adj_tree.insert( i )
 
     def disconnect(self,i,j):
         if i not in adj:
-            raise IndexError('i not in adjacency list')
+            raise IndexError('%i not in adjacency list',i)
         if j not in adj:
-            raise IndexError('j not in adjacency list')
+            raise IndexError('%j not in adjacency list',j)
         
         adj[i].remove(j)
         if self.directed:
@@ -42,7 +63,7 @@ class graph(object):
 
 class random_graph(graph):
 
-    def __init__(self,nodes=set(),delta=.01,directed=False):
+    def __init__(self,nodes={},delta=.5,directed=False):
         graph.__init__(self,nodes,directed)
         self.delta = delta
 
@@ -52,7 +73,7 @@ class random_graph(graph):
             for i in xrange(self.N):
                 for j in xrange(i+1,self.N):
                     if np.random.rand() < self.delta:
-                        self.connect(self.nodes[i],self.nodes[j])
+                        self.connect(self.indices[i],self.indices[j])
         # else 
         else:
             # for each node
@@ -67,8 +88,10 @@ class random_graph(graph):
                         # if random number ~U[0,1] < delta
                         if np.random.rand() < self.delta:
                             self.connect(i,j)
-
-        adj_list = [ self.adj_tree[i].return_as_array() for i in xrange(self.N) ]
+        
+        adj_list = {}
+        for n in self.node:
+            adj_list[n] =  self.node[n].adj_tree.return_as_array()
         return adj_list
 
     def parallel_construct(self,threads=2):
@@ -161,11 +184,20 @@ def construct_small_world_graph(N, p):
 #Input: An array state of the states
 if __name__=='__main__':
     import time
-    
-    N = 8
+
+    N = 800
+
+    node_map = {}
+
+    for i in xrange(N):
+        node_map[2*i] = np.random.randint(40)
+
+    t3 = time.time()
+    G = random_graph(node_map,delta=.3)
+    t4 = time.time()
+    print t4-t3
     t1 = time.time()
-    nodes = [node(i) for i in xrange(N)]
-    G = random_graph(nodes,delta=.1)
-    G.construct()
+    adj=G.construct()
     t2 = time.time()
     print t2-t1
+    

@@ -73,11 +73,11 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
 
 if __name__ == '__main__':
     import time
-    sims = 2
+    sims = 1
 
     t3 = time.time()
     for i in xrange(sims):
-        simulation(N=800,graph='random')
+        st= simulation(N=800,graph='random')
     t4 = time.time()
     print t4 - t3
 
