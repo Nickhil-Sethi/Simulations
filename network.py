@@ -12,39 +12,52 @@ import numpy as np
 import binary_tree
 
 class node(object):
-    def __init__(self,value,index):
+    def __init__(self,value,index=None):
         self.value = value 
         self.index = index
         self.adj_tree = binary_tree.binary_search_tree()
 
 class graph(object):
-    def __init__(self,node_map={},directed=False,loops=False):
+    def __init__(self,node_map,directed=False,loops=False):
         
-        # maps node indices to node values
-        self.node_map = node_map
+        # list of node values
+        if not isinstance(node_map, __builtins__.list):
+            raise TypeError('node map must be type list')
 
+        self.node_map = node_map
+        
         # number of nodes
-        self.N = len(self.node_map)
+        self.N = len(node_map)
 
         # boolean true if graph is directed
         self.directed = directed
 
         # this way? or with node object?
         self.node = {}
-        self.indices = []
-        for n in self.node_map:
-            self.indices.append(n)
-            self.node[n] = node(value=self.node_map[n],index=n)
+        for i,n in enumerate(self.node_map):
+            self.node[i] = node(value=n,index=i)
 
-    # connect node i to node j
-    def connect(self,i,j):
-        if not i in self.node_map:
+    def connected(self,i,j):
+        if not 0 <= i < self.N:
             raise IndexError(i ,' not in adjacency list')
-        if not j in self.node_map:
+        if not 0 <= j < self.N:
             raise IndexError(j ,' not in adjacency list')
 
         # search first if this is in there
-        if not self.node[i].adj_tree.binary_search( j ):
+        if not self.node[i].adj_tree.binary_search(j):
+            return False
+        else:
+            return True
+            
+    # connect node i to node j
+    def connect(self,i,j):
+        if not 0 <= i < self.N:
+            raise IndexError(i ,' not in adjacency list')
+        if not 0 <= j < self.N:
+            raise IndexError(j ,' not in adjacency list')
+
+        # search first if this is in there
+        if not self.node[i].adj_tree.binary_search(j):
             self.node[i].adj_tree.insert( j )
 
         if not self.directed:
@@ -73,22 +86,24 @@ class random_graph(graph):
             for i in xrange(self.N):
                 for j in xrange(i+1,self.N):
                     if np.random.rand() < self.delta:
-                        self.connect(self.indices[i],self.indices[j])
+                        self.node[i].adj_tree.insert(j)
+                        self.node[j].adj_tree.insert(i)
         # else 
         else:
             # for each node
-            for i in self.nodes:
+            for i in self.N:
                 # can be more space efficient?
-                for j in self.nodes:
+                for j in self.N:
                     # nodes are not self connected
                     if loops:
                         if np.random.rand() < self.delta:
-                            self.connect(i,j)
+                            self.node[i].adj_tree.insert(j)
+                            self.node[j].adj_tree.insert(i)
                     elif not loops and j != i:
                         # if random number ~U[0,1] < delta
                         if np.random.rand() < self.delta:
-                            self.connect(i,j)
-        
+                            self.node[i].adj_tree.insert(j)
+                            self.node[j].adj_tree.insert(i)        
         adj_list = {}
         for n in self.node:
             adj_list[n] =  self.node[n].adj_tree.return_as_array()
@@ -185,13 +200,10 @@ def construct_small_world_graph(N, p):
 if __name__=='__main__':
     import time
 
-    N = 50
-    trials = 2
+    N = 900
+    trials = 1
 
-    node_map = {}
-
-    for i in xrange(N):
-        node_map[2*i] = np.random.randint(40)
+    node_map = [np.random.randint(10) for i in xrange(N)]
 
     t1 = time.time()
     for i in xrange(trials):
