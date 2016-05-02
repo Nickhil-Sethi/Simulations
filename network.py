@@ -18,12 +18,13 @@ class node(object):
         self.adj_tree = binary_tree.binary_search_tree()
 
 class graph(object):
-    def __init__(self,node_map,directed=False,loops=False):
+    def __init__(self,node_map=[],directed=False,loops=False):
         
-        # list of node values
+        # sanity check
         if not isinstance(node_map, __builtins__.list):
             raise TypeError('node map must be type list')
 
+        # list of node values 
         self.node_map = node_map
         
         # number of nodes
@@ -39,9 +40,9 @@ class graph(object):
 
     def connected(self,i,j):
         if not 0 <= i < self.N:
-            raise IndexError(i ,' not in adjacency list')
+            raise IndexError(' not in adjacency list')
         if not 0 <= j < self.N:
-            raise IndexError(j ,' not in adjacency list')
+            raise IndexError(' not in adjacency list')
 
         # search first if this is in there
         if not self.node[i].adj_tree.binary_search(j):
@@ -64,19 +65,9 @@ class graph(object):
             if self.node[j].adj_tree.binary_search( i ) == None:
                 self.node[j].adj_tree.insert( i )
 
-    def disconnect(self,i,j):
-        if i not in adj:
-            raise IndexError('%i not in adjacency list',i)
-        if j not in adj:
-            raise IndexError('%j not in adjacency list',j)
-        
-        adj[i].remove(j)
-        if self.directed:
-            adj[j].remove(i)
-
 class random_graph(graph):
 
-    def __init__(self,nodes={},delta=.5,directed=False):
+    def __init__(self,node_map=[],delta=.5,directed=False):
         graph.__init__(self,nodes,directed)
         self.delta = delta
 
@@ -98,12 +89,10 @@ class random_graph(graph):
                     if loops:
                         if np.random.rand() < self.delta:
                             self.node[i].adj_tree.insert(j)
-                            self.node[j].adj_tree.insert(i)
                     elif not loops and j != i:
                         # if random number ~U[0,1] < delta
                         if np.random.rand() < self.delta:
-                            self.node[i].adj_tree.insert(j)
-                            self.node[j].adj_tree.insert(i)        
+                            self.node[i].adj_tree.insert(j)       
         adj_list = {}
         for n in self.node:
             adj_list[n] =  self.node[n].adj_tree.return_as_array()
@@ -112,13 +101,26 @@ class random_graph(graph):
     def parallel_construct(self,threads=2):
 
         # T(N) = 2*T(N/2) + (n**2)/4
+        # divide the nodes evenly into two subgraphs
+
+        # hash function impements nodes -> sub_graph mapping
+        # this is basically a hash map
+        which_graph = [i%2 for i in xrange(self.N)]
+        if self.N%2 == 1:
+            # evens        
+            N1 = self.N/2
+            # odds
+            N2 = self.N/2
+        else:
+            # evens 
+            N1 = self.N/2
+            # odds
+            N2 = self.N/2 + 1
 
         # construct two graphs of size ~ N/2 
         # join two graphs by iterating
 
         # g1 and g2 must be randomly sampled 
-
-        adj = g1_adj + g2_adj
 
         # return two networks to main thread 
         # and connect them via standard procedure
@@ -127,7 +129,6 @@ class random_graph(graph):
                 o = np.random.rand()
                 if o < delta:
                     connect(m,n,adj)
-
         return adj_list
 
 #Constructs scale free graph
@@ -200,7 +201,7 @@ def construct_small_world_graph(N, p):
 if __name__=='__main__':
     import time
 
-    N = 900
+    N = 100
     trials = 1
 
     node_map = [np.random.randint(10) for i in xrange(N)]
