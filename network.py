@@ -185,19 +185,20 @@ def construct_small_world_graph(N, p):
 if __name__=='__main__':
     import time
 
-    N = 800
+    N = 50
+    trials = 2
 
     node_map = {}
 
     for i in xrange(N):
         node_map[2*i] = np.random.randint(40)
 
-    t3 = time.time()
-    G = random_graph(node_map,delta=.3)
-    t4 = time.time()
-    print t4-t3
     t1 = time.time()
-    adj=G.construct()
+    for i in xrange(trials):
+        G=random_graph(node_map,delta=.3)
+        G.construct()
     t2 = time.time()
-    print t2-t1
+
+    print (t2-t1)/float(trials)
+
     
