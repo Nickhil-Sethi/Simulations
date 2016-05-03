@@ -35,8 +35,6 @@ class graph(object):
 
         # this way? or with node object?
         self.node = {}
-        for i,n in enumerate(self.node_map):
-            self.node[i] = node(value=n,index=i)
 
     def connected(self,i,j):
         if not 0 <= i < self.N:
@@ -52,10 +50,6 @@ class graph(object):
             
     # connect node i to node j
     def connect(self,i,j):
-        if not 0 <= i < self.N:
-            raise IndexError(i ,' not in adjacency list')
-        if not 0 <= j < self.N:
-            raise IndexError(j ,' not in adjacency list')
 
         # search first if this is in there
         if not self.node[i].adj_tree.binary_search(j):
@@ -68,10 +62,13 @@ class graph(object):
 class random_graph(graph):
 
     def __init__(self,node_map=[],delta=.5,directed=False):
-        graph.__init__(self,nodes,directed)
+        graph.__init__(self,node_map,directed)
         self.delta = delta
 
     def construct(self):
+        for i,n in enumerate(self.node_map):
+            self.node[i] = node(value=n,index=i)
+        
         # faster iteration loop if graph is undirected
         if not self.directed:
             for i in xrange(self.N):
@@ -105,30 +102,38 @@ class random_graph(graph):
 
         # hash function impements nodes -> sub_graph mapping
         # this is basically a hash map
+
         which_graph = [i%2 for i in xrange(self.N)]
         if self.N%2 == 1:
             # evens        
-            N1 = self.N/2
+            N1 = self.N//2
             # odds
-            N2 = self.N/2
+            N2 = self.N//2 + 1
         else:
             # evens 
             N1 = self.N/2
             # odds
-            N2 = self.N/2 + 1
+            N2 = self.N/2
+
+        G1 = random_graph([ self.node_map[2*i] for i in xrange(N1)],self.delta)
+        G1.construct()
+        
+        G2 = random_graph([ self.node_map[2*i + 1] for i in xrange(N2)],self.delta)
+        G2.construct()
 
         # construct two graphs of size ~ N/2 
         # join two graphs by iterating
 
-        # g1 and g2 must be randomly sampled 
-
         # return two networks to main thread 
         # and connect them via standard procedure
-        for n in G1:
-            for m in G2:
+        for n in xrange(0,self.N,2):
+            for m in xrange(1,self.N,2):
                 o = np.random.rand()
-                if o < delta:
-                    connect(m,n,adj)
+                if o < self.delta:
+                    G1.node[n].adj_tree.insert(m)
+                    G2.node[m].adj_tree.insert(n)
+
+        adj_list = [self.node[i].adj_tree.return_as_array() for i in xrange(self.N)]
         return adj_list
 
 #Constructs scale free graph
@@ -174,7 +179,7 @@ def construct_scale_free_graph(N, w):
 def construct_small_world_graph(N, p):
     adj = {}
     for i in xrange(N):
-        adj[i] = binary_tree.binary_search_tree(binary_tree.binary_node(i))
+        adj[i] = binary_tree.binary_search_tree(binary_tree.binary_node())
 
     for i in xrange(N):
         connect(i, (i-1)%N, adj)
@@ -208,8 +213,8 @@ if __name__=='__main__':
 
     t1 = time.time()
     for i in xrange(trials):
-        G=random_graph(node_map,delta=.3)
-        G.construct()
+        G=random_graph(node_map=node_map,delta=.3)
+        G.parallel_construct()
     t2 = time.time()
 
     print (t2-t1)/float(trials)
