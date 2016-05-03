@@ -1,8 +1,6 @@
 '''
 
-network module.
-
-nodes must be real valued
+network module. nodes must be real valued
 
 @author: Nickhil-Sethi
 
@@ -96,50 +94,47 @@ class random_graph(graph):
 
     def parallel_construct(self,threads=2):
 
-        # T(N) = 2*T(N/2) + (n**2)/4
-        # divide the nodes evenly into two subgraphs
-
-        # hash function impements nodes -> sub_graph mapping
-        # this is basically a hash map
-
+        # records which subgraph each node index goes too
         which_graph = []
 
-        subgraphs= range(threads)
+        # records size of each subgraph
+        subgraph = [0 for i in xrange(threads)]
         for i in xrange(self.N):
-            which_graph.append( i%threads )
-            subgraphs[i%threads] += 1
-        '''
+            which_graph.append( (i%threads, subgraph[i%threads]) )
+            subgraph[i%threads] += 1
+       
+        # dictionary or subgraphs, 
         G = {}
         for i in xrange(threads):
-            G[i] = random_graph( [self.node_map[threads*k + i] for k in xrange(subgraph_sizes[i])],self.delta)
-        '''
-        G1 = random_graph([ self.node_map[2*i] for i in xrange(subgraph_sizes[0]) ],self.delta)        
-        G2 = random_graph([ self.node_map[2*i + 1] for i in xrange(subgraph_sizes[1])] ,self.delta)
+            G[i] = random_graph( [self.node_map[threads*k + i] for k in xrange(subgraph[i])],self.delta)
+            threading.Thread(target=G[i].construct, args=()).start()
 
-        # G1.construct()
-        # G2.construct()
+        '''
+        G1 = random_graph([ self.node_map[2*i] for i in xrange(subgraph[0]) ],self.delta)        
+        G2 = random_graph([ self.node_map[2*i + 1] for i in xrange(subgraph[1])] ,self.delta)
 
         t1=threading.Thread(target=G1.construct, args=())
         t2=threading.Thread(target=G2.construct, args=())
         t1.start()
         t2.start()
 
-        # construct two graphs of size ~ N/2 
-        # join two graphs by iterating
+        '''
+        for i in xrange(self.N):
+            self.node[i] = G[which_graph[i][0]].node[which_graph[i][1]]
+        for i in xrange(self.N-1):
+            for j in xrange(i+1,self.N):               
+                if which_graph[i][0] != which_graph[j][0]:
+                    o = np.random.rand()
+                    if o < self.delta:
+                        self.node[i].adj_tree.insert(j)
+                        self.node[j].adj_tree.insert(i)
 
-        # return two networks to main thread 
-        # and connect them via standard procedure
-        for n in xrange(0,self.N,2):
-            self.node[n] = G1.node[n/2]
-            for m in xrange(1,self.N,2):
-                self.node[m] = G2.node[(m-1)/2]
-                o = np.random.rand()
-                if o < self.delta:
-                    self.node[n].adj_tree.insert(m)
-                    self.node[m].adj_tree.insert(n)
-
-        adj_list = [self.node[i].adj_tree.return_as_array() for i in xrange(self.N)]
-        return adj_list
+        for i in xrange(self.N):
+            try:
+                self.node[i].adj_tree.return_as_array()
+            except:
+                print i, self.N
+        return
 
 #Constructs scale free graph
 #Input: number of vertices, parameter omega
@@ -211,7 +206,7 @@ def construct_small_world_graph(N, p):
 if __name__=='__main__':
     import time
 
-    N = 90
+    N = 400
     trials = 1
 
     node_map = [np.random.randint(10) for i in xrange(N)]
@@ -219,16 +214,16 @@ if __name__=='__main__':
     t1 = time.time()
     for i in xrange(trials):
         G=random_graph(node_map=node_map,delta=.3)
-        G.parallel_construct()
+        G.parallel_construct(threads = 8)
     t2 = time.time()
 
     print (t2-t1)/float(trials)
-
+    '''
     t1 = time.time()
     for i in xrange(trials):
         G=random_graph(node_map=node_map,delta=.3)
         G.construct()
     t2 = time.time()
     print (t2-t1)/float(trials)
-
+    '''
     
