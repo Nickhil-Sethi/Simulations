@@ -25,10 +25,15 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
     if not 0 <= p <= 1:
         raise ValueError('p must be in [0,1]')
 
+    alpha = alpha_raw*dt 
+    beta = beta_raw*dt
+    
+    state=[0 for i in xrange(N)]
+    state[0]=1
 
     # constructing network
     if graph == 'random':
-        G = random_graph(nodes=range(N),delta=delta)
+        G = random_graph(node_map=state,delta=delta)
         adj = G.construct()
     elif graph == 'scale free':
         adj = construct_scale_free_graph(N,w)
@@ -38,11 +43,7 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
     # state transition probabilities for nodes
     # infected node infects susceptible node with probability 'alpha_raw' in one unit of time 
     # infected node becomes 'removed' node with probability 'beta_raw' in one unit of time
-    alpha = alpha_raw*dt 
-    beta = beta_raw*dt
-    
-    state=np.zeros(N)
-    state[0]=1
+
 
     # 'active' queue manages infected nodes
     active = queue.queue()

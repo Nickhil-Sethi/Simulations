@@ -92,6 +92,8 @@ class random_graph(graph):
         adj_list = [ self.node[n].adj_tree.return_as_array() for n in xrange(self.N)] 
         return adj_list
 
+    # useful for constructing larger graphs
+    # N ~ 1000
     def parallel_construct(self,threads=2):
 
         # records which subgraph each node index goes too
@@ -109,18 +111,9 @@ class random_graph(graph):
             G[i] = random_graph( [self.node_map[threads*k + i] for k in xrange(subgraph[i])],self.delta)
             threading.Thread(target=G[i].construct, args=()).start()
 
-        '''
-        G1 = random_graph([ self.node_map[2*i] for i in xrange(subgraph[0]) ],self.delta)        
-        G2 = random_graph([ self.node_map[2*i + 1] for i in xrange(subgraph[1])] ,self.delta)
-
-        t1=threading.Thread(target=G1.construct, args=())
-        t2=threading.Thread(target=G2.construct, args=())
-        t1.start()
-        t2.start()
-
-        '''
         for i in xrange(self.N):
-            self.node[i] = G[which_graph[i][0]].node[which_graph[i][1]]
+            self.node[i] = G[ which_graph[i][0] ].node[ which_graph[i][1] ]
+        
         for i in xrange(self.N-1):
             for j in xrange(i+1,self.N):               
                 if which_graph[i][0] != which_graph[j][0]:
@@ -129,12 +122,9 @@ class random_graph(graph):
                         self.node[i].adj_tree.insert(j)
                         self.node[j].adj_tree.insert(i)
 
-        for i in xrange(self.N):
-            try:
-                self.node[i].adj_tree.return_as_array()
-            except:
-                print i, self.N
-        return
+        adj_list = [self.node[i].adj_tree.return_as_array() for i in xrange(self.N)]
+
+        return adj_list
 
 #Constructs scale free graph
 #Input: number of vertices, parameter omega
@@ -206,7 +196,7 @@ def construct_small_world_graph(N, p):
 if __name__=='__main__':
     import time
 
-    N = 400
+    N = 120
     trials = 1
 
     node_map = [np.random.randint(10) for i in xrange(N)]
@@ -214,7 +204,7 @@ if __name__=='__main__':
     t1 = time.time()
     for i in xrange(trials):
         G=random_graph(node_map=node_map,delta=.3)
-        G.parallel_construct(threads = 8)
+        G.parallel_construct(threads = 5 )
     t2 = time.time()
 
     print (t2-t1)/float(trials)
