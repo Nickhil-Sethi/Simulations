@@ -94,26 +94,19 @@ class binary_tree(object):
 		st = stack.stack()
 
 		node = self.root
-		st.push(node)
 
-		# continue along left line
-
-		while not st.is_empty():
-			if node.left:
-				node = node.left
+		while node or not st.is_empty():
+			if node:
 				st.push(node)
+				node = node.left
 			else:
-				while not st.is_empty():
-					node = st.pop()
-					arr.append(node.value)
-					if node.right:
-						node = node.right
-						st.push(node)
-						break
+				node = st.pop()
+				arr.append(node.value)
+				node = node.right
 
 		return arr
-
-	def df_print(self):
+	
+	def breadth_first_print(self):
 		q = queue.queue()
 		q.enqueue(self.root)
 
@@ -123,10 +116,19 @@ class binary_tree(object):
 			for w in v.children():
 				q.enqueue(w)
 
+	def depth_first_print(self):
+		
+		s = stack.stack()
+		node = self.root
 
-
-
-
+		while node or not s.is_empty():
+			if node:
+				s.push(node)
+				node = node.left
+			else:
+				node = s.pop()
+				print node.value
+				node = node.right
 
 # prototype of binary search tree 
 # nodes must be real valued
@@ -189,8 +191,14 @@ class binary_search_tree(binary_tree):
 					return None
 
 
-
-
 if __name__=='__main__':
 	b = binary_search_tree()
+	for i in xrange(12):
+		b.insert(np.random.randint(20))
+
+	print b.return_as_array(),"\n"
+	b.depth_first_print()
+
+	print 
+	b.breadth_first_print()
 	

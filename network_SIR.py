@@ -31,10 +31,12 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
     state=[0 for i in xrange(N)]
     state[0]=1
 
+    print "     constructing graph..."
+
     # constructing network
     if graph == 'random':
         G = random_graph(node_map=state,delta=delta)
-        adj = G.construct()
+        adj = G.parallel_construct()
     elif graph == 'scale free':
         adj = construct_scale_free_graph(N,w)
     else:
@@ -44,6 +46,7 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
     # infected node infects susceptible node with probability 'alpha_raw' in one unit of time 
     # infected node becomes 'removed' node with probability 'beta_raw' in one unit of time
 
+    print "     simulating disease spread"
 
     # 'active' queue manages infected nodes
     active = queue.queue()
@@ -78,7 +81,7 @@ if __name__ == '__main__':
 
     t3 = time.time()
     for i in xrange(sims):
-        st= simulation(N=800,graph='random')
+        st= simulation(N=1000,graph='random')
     t4 = time.time()
     print t4 - t3
 

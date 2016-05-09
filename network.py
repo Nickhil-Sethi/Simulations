@@ -20,7 +20,7 @@ class graph(object):
     def __init__(self,node_map=[],directed=False,loops=False):
         
         # sanity check
-        if not isinstance(node_map, __builtins__.list):
+        if not type(node_map) is list:
             raise TypeError('node map must be type list')
 
         # list of node values 
@@ -112,7 +112,10 @@ class random_graph(graph):
             threading.Thread(target=G[i].construct, args=()).start()
 
         for i in xrange(self.N):
+            #try:
             self.node[i] = G[ which_graph[i][0] ].node[ which_graph[i][1] ]
+            #except KeyError:
+            #    print "error ", (i, which_graph[i])
         
         for i in xrange(self.N-1):
             for j in xrange(i+1,self.N):               
@@ -196,14 +199,14 @@ def construct_small_world_graph(N, p):
 if __name__=='__main__':
     import time
 
-    N = 120
+    N = 800
     trials = 1
 
     node_map = [np.random.randint(10) for i in xrange(N)]
 
     t1 = time.time()
     for i in xrange(trials):
-        G=random_graph(node_map=node_map,delta=.3)
+        G=random_graph(node_map=node_map,delta=.1)
         G.parallel_construct(threads = 5 )
     t2 = time.time()
 
