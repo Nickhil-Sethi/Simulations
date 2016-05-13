@@ -17,7 +17,6 @@ import numpy as np
 import types
 
 
-
 # prototype of binary node object
 
 class binary_node(object):
