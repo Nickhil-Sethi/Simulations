@@ -7,6 +7,8 @@ network module. nodes must be real valued
 '''
 
 import threading
+import queue
+import stack
 import numpy as np
 import binary_tree
 
@@ -15,6 +17,7 @@ class node(object):
         self.value = value 
         self.index = index
         self.adj_tree = binary_tree.binary_search_tree()
+        self.explored = False
 
 class graph(object):
     def __init__(self,node_map=[],directed=False,loops=False):
@@ -58,6 +61,76 @@ class graph(object):
             if self.node[j].adj_tree.binary_search( i ) == None:
                 self.node[j].adj_tree.insert( i )
 
+    def DFS(self,v,search_value):
+        if self.node[v].value == search_value:
+            return v
+
+        self.node[v].explored = True
+        s = stack.stack()
+        s.push(v)
+
+
+        while not s.is_empty():
+            u = s.pop()
+            if self.node[u].value == search_value:
+                return u
+            else:
+                for w in self.adj_list[u]:
+                    if not self.node[w].explored:
+                        self.node[w].explored = True
+                        s.push(w)
+
+        return None
+
+    def BFS(self,v,search_value):
+        if self.node[v].value == search_value:
+            return v
+
+        self.node[v].explored = True
+        q = queue.queue()
+        q.enqueue(v)
+
+        while not q.is_empty():
+            u = q.dequeue()
+            if self.node[u].value == search_value:
+                return u
+            else:
+                for w in self.adj_list[u]:
+                    if not self.node[w].explored:
+                        self.node[w].explored = True
+                        q.enqueue(w)
+
+        return None
+
+    def connected_component(self,v):
+
+        BFS_tree = [ [] for i in xrange(self.N) ]
+
+        i = 0
+        L = [ queue.queue() ]
+        L[0].enqueue(v)
+
+        self.node[v].explored = True
+        
+
+        while not L[i].is_empty():
+
+            # initialize next layer
+            L.append( queue.queue() )
+            
+            # choose node from i'th layer
+            u = L[i].dequeue()
+            for w in self.adj_list[u]:
+                if not self.node[w].explored:
+                    self.node[w].explored = True
+
+                    BFS_tree[u].append(w)
+                    L[i+1].enqueue(w)
+
+            i+=1
+
+        return BFS_tree
+
 class random_graph(graph):
 
     def __init__(self,node_map=[],delta=.5,directed=False):
@@ -89,46 +162,15 @@ class random_graph(graph):
                         # if random number ~U[0,1] < delta
                         if np.random.rand() < self.delta:
                             self.node[i].adj_tree.insert(j)       
-        adj_list = [ self.node[n].adj_tree.return_as_array() for n in xrange(self.N)] 
-        return adj_list
+        
+        self.adj_list = [ self.node[n].adj_tree.return_as_array() for n in xrange(self.N)] 
+        return self.adj_list
 
     # useful for constructing larger graphs
     # N ~ 1000
-    def parallel_construct(self,threads=2):
-
-        # records which subgraph each node index goes too
-        which_graph = []
-
-        # records size of each subgraph
-        subgraph = [0 for i in xrange(threads)]
-        for i in xrange(self.N):
-            which_graph.append( (i%threads, subgraph[i%threads]) )
-            subgraph[i%threads] += 1
-       
-        # dictionary or subgraphs, 
-        G = {}
-        for i in xrange(threads):
-            G[i] = random_graph( [self.node_map[threads*k + i] for k in xrange(subgraph[i])],self.delta)
-            threading.Thread(target=G[i].construct, args=()).start()
-
-        for i in xrange(self.N):
-            #try:
-            self.node[i] = G[ which_graph[i][0] ].node[ which_graph[i][1] ]
-            #except KeyError:
-            #    print "error ", (i, which_graph[i])
-        
-        for i in xrange(self.N-1):
-            for j in xrange(i+1,self.N):               
-                if which_graph[i][0] != which_graph[j][0]:
-                    o = np.random.rand()
-                    if o < self.delta:
-                        self.node[i].adj_tree.insert(j)
-                        self.node[j].adj_tree.insert(i)
-
-        adj_list = [self.node[i].adj_tree.return_as_array() for i in xrange(self.N)]
-
-        return adj_list
-
+    def parallel_construct(self):
+        return
+     
 #Constructs scale free graph
 #Input: number of vertices, parameter omega
 #Adds vertices sequentially, connects to vertex i with proability w*U(i) + (1-w)*Pr(i)
@@ -199,24 +241,16 @@ def construct_small_world_graph(N, p):
 if __name__=='__main__':
     import time
 
-    N = 800
+    N = 100
     trials = 1
 
     node_map = [np.random.randint(10) for i in xrange(N)]
 
     t1 = time.time()
     for i in xrange(trials):
-        G=random_graph(node_map=node_map,delta=.1)
-        G.parallel_construct(threads = 5 )
+        G=random_graph(node_map=node_map,delta=.5)
+        G.construct()
+        print G.BFS(1,5)
     t2 = time.time()
 
     print (t2-t1)/float(trials)
-    '''
-    t1 = time.time()
-    for i in xrange(trials):
-        G=random_graph(node_map=node_map,delta=.3)
-        G.construct()
-    t2 = time.time()
-    print (t2-t1)/float(trials)
-    '''
-    

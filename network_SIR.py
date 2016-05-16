@@ -36,7 +36,7 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
     # constructing network
     if graph == 'random':
         G = random_graph(node_map=state,delta=delta)
-        adj = G.parallel_construct()
+        adj = G.construct()
     elif graph == 'scale free':
         adj = construct_scale_free_graph(N,w)
     else:
@@ -52,7 +52,7 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
     active = queue.queue()
     active.enqueue(0)
 
-    # main loop
+    # main loop; essentially a BFS
     timer = 0
     while not active.is_empty() and timer < time:
         # dequeue an infected node
