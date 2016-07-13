@@ -20,11 +20,12 @@ import types
 # prototype of binary node object
 
 class binary_node(object):
-	def __init__(self,value):
-		self.name = None
+	def __init__(self,key,value=None):
+		self.key = key
 		self.value = value
 		self.left = None
 		self.right = None
+		self.which = None
 
 	def children(self):
 		children = set()
@@ -44,6 +45,7 @@ class binary_node(object):
 			raise ValueError('node already has left child node')
 		
 		self.left = node
+		self.left.which = 'left'
 
 	def insert_right(self,node):
 		if not isinstance(node,binary_node):
@@ -55,6 +57,7 @@ class binary_node(object):
 			raise ValueError('node already has right child node')
 		
 		self.right = node
+		self.right.which = 'right'
 
 
 
@@ -82,92 +85,33 @@ class binary_tree(object):
 	def is_empty(self):
 		return (self.size == 0)
 
-	# returns tree as an array
-	# elements sorted in order of increasing value
+	# in order traversal
+	def in_order(self):
 
-	def return_as_array(self):
-		if self.is_empty():
-			return []
+		current = self.root
 
-		arr = []
-		st = stack.stack()
-
-		node = self.root
-
-		while node or not st.is_empty():
-			if node:
-				st.push(node)
-				node = node.left
-			else:
-				node = st.pop()
-				arr.append(node.value)
-				node = node.right
-
-		return arr
-	
-	def breadth_first_print(self):
-		q = queue.queue()
-		q.enqueue(self.root)
-
-		while not q.is_empty():
-			v = q.dequeue()
-			print v.value
-			for w in v.children():
-				q.enqueue(w)
-
-	def depth_first_print(self):
-		
+		ret = []
 		s = stack.stack()
-		node = self.root
 
-		while node or not s.is_empty():
-			if node:
-				s.push(node)
-				node = node.left
+		while current or not s.is_empty():
+
+			if current:
+				s.push(current)
+				current = current.left
 			else:
-				node = s.pop()
-				print node.value
-				node = node.right
+				current = s.pop()
+				ret.append(current.key)
+				current = current.right
+	
+		return ret
+
 
 # prototype of binary search tree 
 # nodes must be real valued
 
 class binary_search_tree(binary_tree):
 
-	def insert(self,v):
-		if self.is_empty():
-			self.root = binary_node(v)
-			self.size += 1
-			return
-		
-		new_node = binary_node(v)
-		current = self.root
-
-		keep_going = True
-		while keep_going:
-
-			# necessary? 
-			if len(current.children()) == 0:
-				keep_going = False
-
-			if v >= current.value:
-				if current.right == None:
-					current.insert_right(new_node)
-					keep_going = False
-				else:
-					current = current.right
-			else:
-				if current.left == None:
-					current.insert_left(new_node)
-					keep_going = False
-				else:
-					current = current.left
-		
-		self.size += 1
-
-	# returns node-object if node.value == value
-	# else returns None
-	def binary_search(self, value, current=None):
+	def binary_search(self, key, current=None):
 
 		if self.is_empty():
 			return None
@@ -175,29 +119,60 @@ class binary_search_tree(binary_tree):
 		if current == None:
 			current = self.root
 		
-		if current.value == value:
+		if current.key == key:
 			return current
 		else:
-			if value < current.value:
+			if key < current.key:
 				if current.left:
-					return self.binary_search(value,current.left)
+					return self.binary_search(key,current.left)
 				else:
 					return None
 			else:
 				if current.right:
-					return self.binary_search(value,current.right)
+					return self.binary_search(key,current.right)
 				else:
 					return None
+
+
+	def insert(self,key,value=None):
+		
+		if self.is_empty():
+			self.root = binary_node(key=key,value=value)
+			self.size += 1
+			return
+		
+		new_node = binary_node(key=key,value=value)
+
+		prev = None
+		current = self.root
+
+		while current:
+			if current.key <= key:
+				prev = current
+				current = current.right
+			else:
+				prev = current
+				current = current.left
+
+		if key >= prev.key:
+			prev.right = new_node
+		else:
+			prev.left = new_node
+
+		self.size += 1
+
+
+
+	# returns node-object if node.value == value
+	# else returns None
 
 
 if __name__=='__main__':
 	b = binary_search_tree()
 	for i in xrange(12):
-		b.insert(np.random.randint(20))
+		b.insert(np.random.randint(10))
 
-	print b.return_as_array(),"\n"
-	b.depth_first_print()
+	print b.in_order(),"\n"
+	print b.binary_search(5)
 
-	print 
-	b.breadth_first_print()
 	

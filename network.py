@@ -163,7 +163,7 @@ class random_graph(graph):
                         if np.random.rand() < self.delta:
                             self.node[i].adj_tree.insert(j)       
         
-        self.adj_list = [ self.node[n].adj_tree.return_as_array() for n in xrange(self.N)] 
+        self.adj_list = [ self.node[n].adj_tree.in_order() for n in xrange(self.N)] 
         return self.adj_list
 
     # useful for constructing larger graphs
@@ -248,9 +248,9 @@ if __name__=='__main__':
 
     t1 = time.time()
     for i in xrange(trials):
-        G=random_graph(node_map=node_map,delta=.5)
+        G=random_graph(node_map=node_map,delta=.2)
         G.construct()
-        print G.BFS(1,5)
+        print G.connected_component(0)
     t2 = time.time()
 
     print (t2-t1)/float(trials)

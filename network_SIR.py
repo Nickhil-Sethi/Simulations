@@ -82,6 +82,7 @@ if __name__ == '__main__':
     t3 = time.time()
     for i in xrange(sims):
         st= simulation(N=1000,graph='random')
+        print st
     t4 = time.time()
     print t4 - t3
 
