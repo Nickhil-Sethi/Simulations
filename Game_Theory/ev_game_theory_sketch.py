@@ -3,6 +3,8 @@ import Queue
 import copy
 
 
+
+
 '''
 Simulates evolutionary dynamics of population with pairwise matching in a symmetric 2x2 game
 '''
@@ -23,7 +25,7 @@ class agent(object):
 
 	def __init__(self,index,strategy):
 
-		if not strategy == 'C' or strategy == 'D':
+		if not (strategy == 'C' or strategy == 'D'):
 			raise ValueError('strategy takes value in {C,D}')
 
 		
@@ -136,13 +138,13 @@ class agent(object):
 	def inOrder(self):
 		
 		if not (self.left or self.right):
-			return [self.index]
+			return [(self.index,self.strategy)]
 		elif self.left and self.right:
-			return self.left.inOrder() + [self.index] + self.right.inOrder()
+			return self.left.inOrder() + [(self.index,self.strategy)] + self.right.inOrder()
 		elif self.left and not self.right:
-			return self.left.inOrder() + [self.index]
+			return self.left.inOrder() + [(self.index,self.strategy)]
 		else:
-			return [self.index] + self.right.inOrder()
+			return [(self.index,self.strategy)] + self.right.inOrder()
 
 
 
@@ -216,28 +218,39 @@ class agent_tree(object):
 
 
 
-	def pair(self,indices,start,finish):
+	def randomize(self,indices,start,finish):
+
+		if not len(indices)%2 == 0:
+			print len(indices)
+			raise ValueError('list must be of even length')
 
 		if finish - start <= 1:
-			n = np.random.randint(1,finish-start+1)
+
+			n = np.random.randint(start+1,finish+1)
 			indices[finish],indices[n] = indices[n],indices[finish]
+			
 			return indices
 
 		# pick a random index
-		n = np.random.randint(1,finish-start+1)
+		n = np.random.randint(start+1,finish+1)
 
 		# swap indices[start] and indices[finish]
 		indices[finish],indices[n] = indices[n],indices[finish]
 
-		return self.pair(indices,start+1,finish-1)
+		return self.randomize(indices,start+1,finish-1)
 
 
 
 	def assign(self,indices):
-		new_indices = []
-		for i,n in enumerate(indices):
-			new_indices.append(indices[-i])
-		return new_indices
+
+		N = len(indices)
+
+		M = [0 for i in xrange(N)]
+	
+		for i in xrange(N):
+			M[i] = indices[N-i-1]
+
+		return M
 
 
 
@@ -246,12 +259,17 @@ class agent_tree(object):
 		selected = self.select(alpha)
 
 		indices = [agent.index for agent in selected]
-		indices = self.pair(indices,0,len(indices)-1)
+		indices = self.randomize(indices,0,len(indices)-1)
 
 		return self.assign(indices)
 
 
+	def inOrder(self):
 
+		if self.root:
+			return self.root.inOrder()
+		else:
+			return []
 
 
 
@@ -279,17 +297,12 @@ class symmetric_2by2_Game(object):
 
 # simulates evolution of population under
 # symmetric 2 by 2 game with random pairwise matching
-def simulate(payoffMatrix,simTime=1000,initial_size=100,c_fraction=.05,matching_frequency=.04,death_rate = .001):
-
-
-
-	# create game object
-	G = symmetric_2by2_Game(payoffMatrix)
-
+def simulate(G,simTime=100,initial_size=100,c_fraction=.05,matching_frequency=.04,death_rate = .001):
 
 
 	# initialize population
 	population = agent_tree()
+
 	c_counter = 0
 	d_counter = 0
 
@@ -305,14 +318,12 @@ def simulate(payoffMatrix,simTime=1000,initial_size=100,c_fraction=.05,matching_
 		population.insert(new_agent)
 
 
-
 	# simulate population dynamics
 
 	time = 0
 	while time < simTime:
 
-		selected = population.select(matching_frequency)
-		matches = population.match(selected)
+		matches = population.match(matching_frequency)
 
 		for pair in matches:
 			
@@ -330,13 +341,12 @@ def simulate(payoffMatrix,simTime=1000,initial_size=100,c_fraction=.05,matching_
 					else:
 						d_counter += 1
 
-
-		frac_c = float(c_counter)/ float(c_counter + d_counter)
+		frac_c = float(c_counter)/float(c_counter + d_counter)
 		frac_d = 1 - frac_c
+		
+		print frac_c,frac_d
 
-
-
-	return stats
+	return
 
 
 
@@ -345,11 +355,6 @@ def simulate(payoffMatrix,simTime=1000,initial_size=100,c_fraction=.05,matching_
 
 if __name__=='__main__':
 
-	B = agent_tree()
-
-	A = range(100)
-
-	L=B.pair(A,0,99)
-	print B.assign(L) 
-
+	G = symmetric_2by2_Game(10,20,1,5)
+	simulate(G)
 
