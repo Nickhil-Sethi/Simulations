@@ -5,6 +5,15 @@ import copy
 
 
 
+
+
+# TODO:
+# change queue object to my own queue
+# clean up 'assign' function
+
+
+
+
 '''
 Simulates evolutionary dynamics of population with pairwise matching in a symmetric 2x2 game
 '''
@@ -12,13 +21,8 @@ Simulates evolutionary dynamics of population with pairwise matching in a symmet
 
 
 
-
-# population of agents implemented 
-# as a binary_search tree
-
+# population of agents implemented as a binary_search tree
 # agent is node in tree
-
-
 
 class agent(object):
 
@@ -57,7 +61,6 @@ class agent(object):
 	def search(self,s_index):
 
 		if self.index == s_index:
-			
 			return self
 		
 		elif self.index <= s_index:
@@ -76,21 +79,27 @@ class agent(object):
 		if not isinstance(n_agent,agent):
 			raise TypeError('insert expects type(agent)')
 
-		if self.index == n_agent.index:
-			raise IndexError('index already exists')
-		if self.index < n_agent.index:
-			if not self.right:
-				self.right = n_agent
-				n_agent.parent = self
+
+		current = self
+		while current:
+			prev = current
+
+			if current.index == n_agent.index:
+				raise ValueError('index already in tree')
+
+			if current.index < n_agent.index:
+				current = current.right
 			else:
-				self.right.insert(n_agent)
-		
+				current = current.left
+
+		if prev.index <= n_agent.index:
+			prev.right = n_agent
 		else:
-			if not self.left:
-				self.left = n_agent
-				n_agent.parent = self
-			else:
-				self.left.insert(n_agent)
+			prev.left = n_agent
+
+		n_agent.parent = prev
+
+
 
 
 
@@ -137,23 +146,35 @@ class agent(object):
 
 	def inOrder(self):
 		
-		if not (self.left or self.right):
-			return [(self.index,self.strategy)]
-		elif self.left and self.right:
-			return self.left.inOrder() + [(self.index,self.strategy)] + self.right.inOrder()
-		elif self.left and not self.right:
-			return self.left.inOrder() + [(self.index,self.strategy)]
-		else:
-			return [(self.index,self.strategy)] + self.right.inOrder()
+		res = []
+		stack = []
 
+		stack.append(self)
+		current = self
 
+		while stack:
 
+			while current.left:
 
+				stack.append(current)
+				current = current.left
 
+			while stack:
+				
+				current = stack.pop()
+				res.append((current.index,current.strategy))
+				
+				if current.right:
+					current = current.right
+					stack.append(current)
+					break
 
+		return res
 
 
 class agent_tree(object):
+
+
 
 	def __init__(self):
 		self.root = None
@@ -172,7 +193,11 @@ class agent_tree(object):
 			self.root.insert(agent)
 
 
-
+	def search(self,index):
+		if not self.root:
+			return None
+		else:
+			return self.root.search(index)
 
 	def delete(self,index):
 
@@ -194,17 +219,28 @@ class agent_tree(object):
 		if not self.root:
 			raise ValueError('tree empty')
 
+
+		# compute number of agents to be selected
 		N = np.floor(alpha*self.size)
 
+		# if N is odd, add 1
 		if N%2 != 0:
 			N+=1 
+
+		# assert N is even
+		assert N%2 == 0
+
+
+		# traverse agent tree by depth first search
+		# each agent is added with probability alpha
+		# until N agents are added
 
 		selected = []
 
 		Q = Queue.Queue()
 		Q.put(self.root)
 
-		while not Q.empty() and len(selected) < N:
+		while len(selected) < N:
 
 			current = Q.get()
 
@@ -214,15 +250,16 @@ class agent_tree(object):
 			for child in current.children():
 				Q.put(child)
 
+		# assert that N agents have been selected
+		assert len(selected) == N
+
 		return selected
 
 
 
-	def randomize(self,indices,start,finish):
+	def permutation(self,indices,start,finish):
 
-		if not len(indices)%2 == 0:
-			print len(indices)
-			raise ValueError('list must be of even length')
+		assert len(indices)%2 == 0
 
 		if finish - start <= 1:
 
@@ -237,31 +274,57 @@ class agent_tree(object):
 		# swap indices[start] and indices[finish]
 		indices[finish],indices[n] = indices[n],indices[finish]
 
-		return self.randomize(indices,start+1,finish-1)
+		return self.permutation(indices,start+1,finish-1)
 
 
 
-	def assign(self,indices):
+	def assign(self,originalList):
 
-		N = len(indices)
+		# two copies of list are needed to randomize list
+		randomizedList = copy.copy(originalList)
+		
+		N = len(randomizedList)
+		assert N%2 == 0
 
-		M = [0 for i in xrange(N)]
-	
-		for i in xrange(N):
-			M[i] = indices[N-i-1]
+		randomizedList = self.permutation(randomizedList,0,N-1)
 
-		return M
+
+		for index in xrange(len(randomizedList)/2):
+			
+			old = randomizedList[index]
+			new = randomizedList[N-index-1] 
+
+			old_index = originalList.index(old)
+			new_index = originalList.index(new)
+
+			originalList[new_index] = old
+			originalList[old_index] = new
+
+		return originalList
 
 
 
 	def match(self,alpha):
 
+		# select agents
 		selected = self.select(alpha)
+		N = len(selected)
 
+		# create list object to be randomized
 		indices = [agent.index for agent in selected]
-		indices = self.randomize(indices,0,len(indices)-1)
 
-		return self.assign(indices)
+		# randomize indices
+		permuted_indices = self.assign(indices)
+
+		# pairs are just adjacent indices
+		pairs = [(permuted_indices[i],search(permuted_indices[i+1]) for i in xrange(0,N,2)]
+
+		for pair in pairs:
+			# find agent 1 
+
+		
+		
+
 
 
 	def inOrder(self):
@@ -273,6 +336,14 @@ class agent_tree(object):
 
 
 
+	def is_sorted(self):
+
+		data = self.inOrder()
+
+		for i in xrange(self.size-1):
+			if data[i] > data[i+1]:
+				return False
+		return True
 
 
 
@@ -297,8 +368,7 @@ class symmetric_2by2_Game(object):
 
 # simulates evolution of population under
 # symmetric 2 by 2 game with random pairwise matching
-def simulate(G,simTime=100,initial_size=100,c_fraction=.05,matching_frequency=.04,death_rate = .001):
-
+def simulate(G,simTime=100,initial_size=5000,c_fraction=.05,matching_frequency=.04,death_rate = .001,check_in=10):
 
 	# initialize population
 	population = agent_tree()
@@ -317,8 +387,13 @@ def simulate(G,simTime=100,initial_size=100,c_fraction=.05,matching_frequency=.0
 		
 		population.insert(new_agent)
 
+	assert population.is_sorted()
 
 	# simulate population dynamics
+
+	# returns fraction cooperating or defecting at any given time
+	stats = [ [0,0] for i in xrange(simTime) ]
+
 
 	time = 0
 	while time < simTime:
@@ -344,17 +419,23 @@ def simulate(G,simTime=100,initial_size=100,c_fraction=.05,matching_frequency=.0
 		frac_c = float(c_counter)/float(c_counter + d_counter)
 		frac_d = 1 - frac_c
 		
-		print frac_c,frac_d
+		stats[time] = [frac_c,frac_d]
 
-	return
+		time += 1
 
+		if time%check_in==0:
+			print "simulation {}% completed".format(float(time)/float(simTime))
 
+	return population,stats
 
 
 
 
 if __name__=='__main__':
 
-	G = symmetric_2by2_Game(10,20,1,5)
-	simulate(G)
+	G = symmetric_2by2_Game(10,5,20,8)
 
+	P,_ = simulate(G)
+
+	print _
+	
