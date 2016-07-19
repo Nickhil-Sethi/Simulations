@@ -1,7 +1,7 @@
 import numpy as np
 
 # simulates one round of game
-def play(C,D,A):
+def play(C,D,A,anti_simmetric=False):
 
 	# total population size
 	N = C + D
@@ -27,23 +27,23 @@ def play(C,D,A):
 
 if __name__=='__main__':
 	
-	num_simulations = 100
-	max_pop_size = 1000000
+	num_simulations = 10
+	max_pop_size = 4000000
 
 	# payoff matrix
-	B = [[1,3],[0,2]]
-	A = [[2,3],[3,2]]
-
+	prisoners_dilemma = [[5,0],[3,1]]
+	battle_of_the_sexes = [[2,3],[3,2]]
+	matching_pennies = [[1,-1],[-1,1]]
 	# run 100 independent simulations w/ same initial conditions
 	for i in xrange(num_simulations):
 		
-		C = 1.
+		C = 80.
 		D = 100. - C
 		N = C+D
 
 		# simulate until population hits size
 		while N < max_pop_size:
-			C,D,N = play(C,D,A)
+			C,D,N = play(C,D,prisoners_dilemma)
 
 		# print final distribution
 		print C/N,D/N
