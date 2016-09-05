@@ -1,10 +1,11 @@
 class binary_node(object):
 	def __init__(self,key,value=None):
-		self.key = key
-		self.value = value
 
-		self.left = None
-		self.right = None
+		self.key 	= key
+		self.value 	= value
+
+		self.left 	= None
+		self.right 	= None
 		self.parent = None
 
 	def children(self):
@@ -19,10 +20,9 @@ class binary_node(object):
 
 	def insert(self,new_node):
 		if not isinstance(new_node,binary_node):
-			raise TypeError('new node must be instance of binary_node')
+			new_node = binary_node(new_node)
 
 		current = self
-
 		while current:
 			
 			prev = current
@@ -133,22 +133,27 @@ class binary_node(object):
 
 		while stack:
 
+			current = stack.pop()
+
 			while current:
 				
 				stack.append(current)
 				current = current.left
 
 			while stack:
+				
 				current = stack.pop()
 				res.append((current.key,current.value))
+				
 				if current.right:
-					current = current.right
+					stack.append(current.right)
 					break
+
 		return res
 
 
 
-class binary_tree(object):
+class binary_search_tree(object):
 
 	def __init__(self):
 		self.root = None
@@ -185,6 +190,22 @@ class binary_tree(object):
 					self.root = new
 
 			self.size -= 1
+
+	def inOrder(self):
+
+		if self.root:
+			return self.root.inOrder()
+		else:
+			return []
+
+def isSorted(arr):
+	L = len(arr)
+
+	for i in xrange(L-1):
+		if arr[i] > arr[i+1]:
+			return False
+	return True
+
 if __name__=='__main__':
 
 	import numpy as np 
@@ -192,7 +213,13 @@ if __name__=='__main__':
 	B = binary_tree()
 
 	while B.size < 100:
-		B.insert( binary_node( (-1)**B.size*np.random.randint(1000) ) )
+		B.insert( binary_node( ((-1)**B.size)*B.size ) )
 
-	print B.root.inOrder()
+
+	print B.root.key
+
+	I = B.inOrder()
+
+	print I
+	print isSorted([k[0] for k in I])
 

@@ -31,9 +31,10 @@ if __name__=='__main__':
 	max_pop_size = 4000000
 
 	# payoff matrix
-	prisoners_dilemma = [[5,0],[3,1]]
+	prisoners_dilemma = [[2,0],[3,1]]
 	battle_of_the_sexes = [[2,3],[3,2]]
 	matching_pennies = [[1,-1],[-1,1]]
+	
 	# run 100 independent simulations w/ same initial conditions
 	for i in xrange(num_simulations):
 		

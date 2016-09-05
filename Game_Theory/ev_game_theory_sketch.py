@@ -317,12 +317,10 @@ class agent_tree(object):
 		permuted_indices = self.assign(indices)
 
 		# pairs are just adjacent indices
-		pairs = [(permuted_indices[i],search(permuted_indices[i+1]) for i in xrange(0,N,2)]
+		pairs = [(permuted_indices[i],search(permuted_indices[i+1]))for i in xrange(0,N,2)]
 
 		for pair in pairs:
 			# find agent 1 
-
-		
 		
 
 
