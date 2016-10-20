@@ -1,176 +1,51 @@
-import sys
-sys.path.insert(0,'/Library/Python/2.7/site-packages')
+import queue 
 
-import os
-import sys
-import time
-import timeit
-
-import numpy
-
-class element(object):
-	def __init__(self, value):
-		self.value = value
-		self.next = 'null'
-		self.prev = 'null'
-
-class queue(object):
-	def __init__(self):
-		self.len = 0
-		self.first = element('null')
-		self.last = element('null')
-
-	def pop(self):
-		if self.len==0:
-			print 'queue empty'
-			return -1
-		elif self.len == 1:
-			r  = self.first
-			self.first = 'null'
-			self.len = 0
-			return r
-		else:
-			r = self.first
-			self.first = self.first.next
-			self.len = self.len - 1
-			return r
-
-	def append(self,el):
-		if not isinstance(el, element):
-			raise TypeError('Not Correct Class!')
-		if self.len == 0:
-			self.first = el
-			self.last = el
-			self.len += 1
-		else:
-			l = self.last
-			self.last.next = el
-			self.last = el
-			self.last.prev = l
-			self.len += 1
-
-
-	def get_next(self,el):
-		return el.next.value
-
-	def search_forward(self,a):
-		counter = 0
-		current = self.first
-		while(counter <= a and counter <= self.len):
-			if(counter == a):
-				return current.value
-			current = current.next
-			counter += 1
-	
-	def search_back(self,a):
-		counter = self.len
-		current = self.last
-		while(counter >= self.len - a and counter <= 0):
-			if(counter == a):
-				return current.value
-			current = current.next
-			counter += 1
-	 
-	def get_element(self,a):
-		#linear search for a'th element in queue
-		if type(a) != int:
-			raise TypeError('Index must be integer!')
-		elif a < 0:
-			raise TypeError('a must be greater than 0')
-		elif a > self.len:
-			raise TypeError('Index is greater than length of queue!')
-
-		#searching
-		elif a > numpy.floor(float(self.len)/2.0):
-			self.search_back(a)
-		else:
-			self.search_forward(a)
+import numpy as np
 
 class server(object):
-	def __init__(self, failure_probability = .01):
-		self.failure_probability = failure_probability
-		self.active = True 
+	def __init__(self,inbuf_size,fail_probability):
+		self.inbuf 				= queue.queue(max_size=inbuf_size)
+		self.fail_probability 	= fail_probability
+		self.active 			= True
 
-	def service(self, customer):
-		if(not isinstance(customer,element)):
-			print customer, type(customer)
-			raise TypeError('Not an element of queue!')
-		else:
-			print customer.value, 'serviced'
+	def process(self):
+		if self.inbuf:
+			p = self.inbuf.pop()
+
+class service_network(object):
+	def __init__(self):
+		self.adj = {}
+
+
+if __name__=='__main__':
+	lam				= 20.0
+	ENTRY_PROB		= .01
+	FAIL_PROB 		= .1
+	NUM_SERVERS 	= 10
+	NUM_ENTRANTS	= 100
+	SIM_TIME		= 4000
+
+	def tree_like():
 		
+		SERVERS 		= [ server(np.random.randint(10),FAIL_PROB) for x in xrange(NUM_SERVERS) ]
+		ENTRY			= queue.queue(max_size=100)
+		
+		t = 0
+		while t < SIM_TIME:
+			
+			news = np.random.poisson(lam=lam)
+			for i in xrange(news):
+				ENTRY.enqueue(np.random.randint(20))
 
-def find_server(server_dict):
-	#returns first server which is active
-	l = len(server_dict)
-	if not isinstance(server_dict[0], server):
-		raise TypeError('Not a server!')
-	else:
-		for s in range(l):
-			serv = server_dict[s]
-			if serv.active == True:
-				return serv
-		print 'No active servers'
-		return -1
+			for server in SERVERS:
+				if server.active:
+					try:
+						server.inbuf.enqueue(ENTRY.dequeue())
+					except Exception:
+						pass
+				if np.random.rand() <= server.fail_probability:
+					server.active = False
+				
+			t += 1
 
-def queue_simulation(f_prob ,simulation_time = 400, service_start = 10, num_servers = 1, arrival_probability = .3):
-
-	time = 0
-	service_counter = 0
-
-	q = queue()
-	serv_dict = {}
-	for i in range(num_servers):
-		serv_dict[i] = server(failure_probability = f_prob)
-
-	print 'failure probability = ', serv_dict[0].failure_probability, '\n'
-
-	while(time <= simulation_time):
-		#random arrival at end of queue
-		servers_active = float(sum([serv_dict[i].active == True for i in range(num_servers)]))/(float(num_servers))
-
-		if servers_active == 0.0:
-			print '0% of original {} server(s) still active. ending simulation at time {}'.format(num_servers,time)
-			return time,q,serv_dict
-
-		print 'percent of servers still active = {}%'.format(servers_active*100)
-		v = numpy.random.rand()
-		if v > arrival_probability:
-			new_element = element(service_counter)
-			q.append(new_element)
-
-		#randomly deactivate servers; servers go down, but do not come back up
-		for k in range(num_servers):
-			serv = serv_dict[k]
-			f = numpy.random.rand()
-			if f < serv.failure_probability:
-				print 'a crash occurred in server {}'.format(k)
-				serv.active = False 
-
-		#service starts
-		n = q.pop()
-		if n != -1:
-			first_server = find_server(serv_dict)
-			if isinstance(first_server, server):
-			#bug here! first_server is "NoneType"
-				first_server.service(n)
-				print 'current queue length', q.len
-
-		#modified service starts
-		first_server = find_server(serv_dict)
-		if first_server != -1:
-			n = q.pop()
-			if n != -1:
-				first_server.service(n)
-
-		print 
-		service_counter += 1
-		time += 1
-
-	return q
-
-s = server()
-print s.failure_probability
-t,q,sd = queue_simulation( f_prob = .05 , num_servers = 10, arrival_probability = .7)
-for x in xrange(10):
-	print sd[x].active
-
+		print([(server.inbuf.items(),server.active) for server in SERVERS])

@@ -15,12 +15,11 @@ class binary_node(object):
 			ch.append(self.left)
 		if self.right:
 			ch.append(self.right)
-
 		return ch
 
-	def insert(self,new_node):
-		if not isinstance(new_node,binary_node):
-			new_node = binary_node(new_node)
+	def insert(self,key,value=None):
+
+		new_node = binary_node(key,value)
 
 		current = self
 		while current:
@@ -159,9 +158,8 @@ class binary_search_tree(object):
 		self.root = None
 		self.size = 0
 
-	def insert(self,node):
-		if not isinstance(node,binary_node):
-			raise TypeError('insert node must be instance of binary_node')
+	def insert(self,key,value=None):
+		node = binary_node(key,value)
 		if not self.root:
 			self.root = node
 		else:
@@ -210,7 +208,7 @@ if __name__=='__main__':
 
 	import numpy as np 
 
-	B = binary_tree()
+	B = binary_search_tree()
 
 	while B.size < 100:
 		B.insert( binary_node( ((-1)**B.size)*B.size ) )

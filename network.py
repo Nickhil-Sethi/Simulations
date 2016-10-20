@@ -89,15 +89,15 @@ class GeneNetwork(Network):
         for i in xrange(num_nodes):
             self.add_node(i)
 
-        self_edge_stack     = range(num_nodes)
-        non_self_edge_stack = zip(range(num_nodes),derange(range(num_nodes)))
+        self_edges     = range(num_nodes)
+        nonSelf_edges  = zip(range(num_nodes),derange(range(num_nodes)))
 
         numpy.random.shuffle(self_edge_stack)
         numpy.random.shuffle(non_self_edge_stack)
 
         edge_counter    = 0
         selected_edges  = []
-        print self.p
+
         while edge_counter <= num_edges:
             o = numpy.random.rand()
             if o <= self.p and self_edge_stack:
@@ -115,5 +115,5 @@ class GeneNetwork(Network):
 if __name__=='__main__':
 
     G = GeneNetwork(.3)
-    print(G.construct(20,20))
+    G.construct(20,20)
 
