@@ -1,119 +1,133 @@
-'''
+import numpy as np
+def connect(i,j,adj,symmetric=True):
+    if not i in adj:
+        raise IndexError('i not in adjacency list')
+    if not j in adj:
+        raise IndexError('j not in adjacency list')
+    
+    adj[i].add(j)
+    if symmetric:
+        adj[j].add(i)
 
-network module
+def disconnect(i,j,adj,symmetric=True):
+    if i not in adj:
+        raise IndexError('i not in adjacency list')
+    if j not in adj:
+        raise IndexError('j not in adjacency list')
+    
+    adj[i].remove(j)
+    if symmetric:
+        adj[j].remove(i)
 
-@author: Nickhil-Sethi
+def construct_random_graph(N, delta):
 
-'''
+    adj_list = {}
+    nodes = range(N)
 
-import queue
-import stack
-import binary_tree
+    for i in nodes:
+        adj_list[i] = set()
+    # for each node
+    others = set(nodes)
+    for i in nodes:
+        # can be more space efficient?
+        others.remove(i)
+        for j in list(nodes):
+            # if random number ~U[0,1] < delta
+            if np.random.rand() < delta:
+                connect(i,j,adj_list)
+        others.add(i)
 
-import numpy.random
-from copy import copy
+    return adj_list
 
-def derange(arr):
+#Constructs scale free graph
+#Input: number of vertices, parameter omega
+#Adds vertices sequentially, connects to vertex i with proability w*U(i) + (1-w)*Pr(i)
+#U is uniform distribution, Pr(i) = d(i)/sum_j (d_j), where d(i) represents the number of edges
+#vertex i has
+#Output: Adjacency matrix    
+def construct_scale_free_graph(N, w):
+    
+    Pr = []
+    Pr.append(.5)
+    Pr.append(.5)
 
-    copy_array        = copy(arr)
+    adj = {}
+    for i in xrange(N):
+        adj[i] = set()
+    
+    adj[0].add(1)
+    adj[1].add(0)
 
-    start_index       = 0
-    end_index         = len(arr) - 1
-    len_list          = len(arr)
+    for v in xrange(2,N):
 
-    while len_list > 0:
+        U = [ 1./float(v) for i in xrange(v) ]
+        X = [ (1-w)*U[i] + (w)*(Pr[i]) for i in xrange(v)]
         
-        k                                       = numpy.random.randint(len_list)
-        arr[start_index + k], arr[end_index]    = arr[end_index], arr[start_index + k]
+        x = np.random.choice(range(v), size = None , replace = True, p = X)
+        connect(v,x,adj)
 
-        start_index                             += 1
-        end_index                               -= 1
+        l = [ len(adj[i]) for i in xrange(v+1) ]
+        
+        # update Preferential distribution
+        total = sum(l)
+        Pr = [float(l[i])/float(total) for i in xrange(v+1)]
 
-        len_list                                = end_index - start_index + 1
-
-    for index in xrange(len(arr)//2):
-        early   = arr[index]
-        late    = arr[-(index + 1)]
-
-        i1 = copy_array.index(early)
-        i2 = copy_array.index(late) 
-
-        copy_array[i1], copy_array[i2] = copy_array[i2], copy_array[i1]
-
-    return copy_array
-
-class Node(object):
-    def __init__(self,index,value=None):
-        self.value          = value 
-        self.index          = index
-        self.adjacency_set  = binary_tree.binary_search_tree()
-        self.explored       = False
+    return adj
     
-    def connect(self,target_index):
-        self.adjacency_set.insert(target_index)
+#Input: Number of vertices N, parameter p
+#Constructs graph by beginning with circular ring on which every vertex is connected
+#to the two nearest neighbors on each side. With probability p each edge is broken and
+#reconnected to another vertex chosen from a uniform distribution
+#Output: Adjacency matrix
+def construct_small_world_graph(N, p):
+    adj = {}
+    for i in xrange(N):
+        adj[i] = set()
+
+    for i in xrange(N):
+        connect(i, (i-1)%N, adj)
+        connect(i, (i+1)%N, adj)
+        connect(i, (i-2)%N, adj)
+        connect(i, (i+2)%N, adj)
     
-    def disconnect(self,target_index):
-        self.adjacency_set.delete(target_index)
+    nodes = set(range(N))
+    for i in range(N):
+        for j in range(i+1,N):
+            if j in adj[i]:
+                o = np.random.rand()
+                if(o < p):
+                    nodes.remove(j)
+                    x = np.random.choice(list(nodes))
+                    nodes.add(j)
+                    disconnect(i,j,adj)
+                    connect(i,x,adj)
 
-    def connects_to(self,target_index):
-        return (target_index in self.adjacency_set)
+    return adj
 
-class Network(object):
-    def __init__(self):
-        self.size   = 0
-        self.nodes  = {}
+
+#Input: A fixed vertex v, in_V the in-neighborhood of V, 
+#state the array representing the states (S, I ,R) of each vertex
+
+#Output: Updates state based on neighborhood of v. If v succeptible, draws bernoulli random
+#variable with success probability alpha*dt for every infected agent in its neighborhood
+#if infected, v becomes removed with probability beta*dt
+
+
+#Input: An (N x N) adjacency matrix
+
+#Output: A list "all_neighborhoods" of arrays, with all_neighborhoods[v] representing
+#the neighborhood of vertex v
+
+def average_centrality(adj):  
+    N = len(adj)
+    l = np.zeros(N)
+    neighborhoods = find_all_in_neighborhoods(adj)
+    for i in range(N):
+        l[i] = len(neighborhoods[i])
+        
+    total = sum(l)
+    avg = float(total)/float(N)
     
-    def __contains__(self,n):
-        return (n in self.nodes)
-    
-    def add_node(self,index,value=None):
-        if index in self:
-            raise IndexError('nodes %d already in graph' % index)
-        new_node = Node(index,value)
-        self.nodes[index] = new_node
-    
-    def remove_node(self,index):
-        if index in self:
-            for n in self.nodes:
-                if index in self.nodes[n]:
-                    self.nodes[n].disconnect(index)
-            return self.nodes.pop(index)
+    return avg
 
-class GeneNetwork(Network):
-    def __init__(self,p):
-        Network.__init__(self)
-        self.p      = p
-
-    def construct(self, num_nodes, num_edges):
-
-        for i in xrange(num_nodes):
-            self.add_node(i)
-
-        self_edges     = range(num_nodes)
-        nonSelf_edges  = zip(range(num_nodes),derange(range(num_nodes)))
-
-        numpy.random.shuffle(self_edge_stack)
-        numpy.random.shuffle(non_self_edge_stack)
-
-        edge_counter    = 0
-        selected_edges  = []
-
-        while edge_counter <= num_edges:
-            o = numpy.random.rand()
-            if o <= self.p and self_edge_stack:
-                selected_edges.append( (len(self_edge_stack) - 1, self_edge_stack.pop() )  )
-            else:
-                selected_edges.append( non_self_edge_stack.pop() )
-            edge_counter += 1
-
-        for edge in selected_edges:
-            self.nodes[edge[0]].connect(edge[1])
-
-        return selected_edges
-
-
-if __name__=='__main__':
-
-    G = GeneNetwork(.3)
-    G.construct(20,20)
-
+#Input: An array state of the states
