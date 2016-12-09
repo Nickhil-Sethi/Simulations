@@ -19,14 +19,26 @@ class binaryNode(object):
 			current 		= current.left
 		return prev, parent
 	
+	def get_size(self):
+		ls = 0 if not self.left else self.left.size
+		lr = 0 if not self.right else self.right.size
+		self.size = 1 + ls + lr
+		return self.size
+
 	def is_right(self):
 		return (self.parent != None and self.parent.key < self.key)
 
 	def set_left(self,node):
+		if node is None:
+			self.left = None
+			return
 		self.left 			= node
 		node.parent 		= self
 
 	def set_right(self,node):
+		if node is None:
+			self.right = None
+			return
 		self.right  		= node
 		node.parent 		= self
 
@@ -79,7 +91,6 @@ class binaryNode(object):
 			else:
 				while stack:
 					current = stack.pop()
-					# print "st", current
 					ret.append(current)
 					if current.right:
 						current = current.right
@@ -215,7 +226,9 @@ class AVLnode(binaryNode):
 			R.parent = None
 		
 		self.get_height()
+		self.get_size()
 		R.get_height()
+		R.get_size()
 		return R
 
 	def rotate_right(self):
@@ -238,7 +251,9 @@ class AVLnode(binaryNode):
 			L.parent = None
 
 		self.get_height()
+		self.get_size()
 		L.get_height()
+		L.get_size()
 		return L
 
 	def insert(self,key,value=None):
@@ -264,13 +279,13 @@ class AVLnode(binaryNode):
 		else:
 			prev.set_left(newNode)
 		stack.append(newNode)
-		self.size += 1
 
 		# rebalancing tree
 		newRoot = None
 		while stack:
 			current 		= stack.pop()
 			current.get_height()
+			current.get_size()
 			if current.balance_factor() > 1:
 				if not current.balance_factor() == 2:
 					raise ValueError('{} balance factor == {}; trying to insert {}'.format(current,current.balance_factor(),newNode))
@@ -293,10 +308,12 @@ class AVLnode(binaryNode):
 				if not current.parent:
 					newRoot = current
 				break
+		
 		# adjust balance_factors for other nodes
 		while stack:
 			current = stack.pop() 
 			current.get_height()
+			current.get_size()
 
 		return newRoot
 
@@ -309,7 +326,7 @@ class AVLnode(binaryNode):
 					node.parent.right = None
 				else:
 					node.parent.left  = None
-				
+
 				current = node.parent
 				while current:
 					current.get_height()
@@ -324,7 +341,7 @@ class AVLnode(binaryNode):
 				else:
 					node.parent.set_left(node.left)
 
-				current = node.parent
+				current 	= node.parent
 				while current:
 					current.get_height()
 					current = current.parent
@@ -338,7 +355,7 @@ class AVLnode(binaryNode):
 				else:
 					node.parent.set_left(node.right)
 
-				current = node.parent
+				current 	= node.parent
 				while current:
 					current.get_height()
 					current = current.parent
@@ -387,7 +404,10 @@ class AVLTree(object):
 		if values:
 			assert type(values) is list
 			for value in values:
-				self.insert(value[0],value[1])
+				if type(value) is list and len(value) == 2:
+					self.insert(value[0],value[1])
+				if type(value) in [int,float,str]:
+					self.insert(value)
 	
 	def size(self):
 		if not self.root:
@@ -403,8 +423,44 @@ class AVLTree(object):
 				self.root = v
 
 	def delete(self,key):
-		if self.root:
+		if self.root and key != self.root.key:
 			self.root.delete(key)
+		elif self.root:
+			if not self.root.left and not self.root.right:
+				self.root = None
+				self.size = 0
+				return
+			if self.root.left and not self.root.right:
+				old_root 			= self.root
+				self.root 			= self.root.left
+				self.root.parent 	= None
+				del old_root
+				self.size 			-= 1
+				return
+			if self.root.right and not self.root.left:
+				old_root 			= self.root
+				self.root 			= self.root.right
+				self.root.parent 	= None
+				del old_root
+				self.size 			-= 1
+				return
+			if self.root.left and self.root.right:
+				old_root			= self.root
+				minRight 			= self.root.right.min_right()
+				if minRight == self.root.right:
+					minRight.set_left(self.root.left)
+				else:
+					if minRight.right:
+						minRight.parent.set_left(minRight.right)
+					else:
+						minRight.parent.left = None
+					minRight.set_right(node.right)
+					minRight.set_left(node.left)
+				self.root = minRight
+				self.root.parent = None
+				del old_root
+				self.size 			-= 1
+				return
 
 	
 	def search(self,key):
@@ -430,21 +486,26 @@ if __name__=='__main__':
 
 	test_AVL = True
 	if test_AVL:
-		n  = AVLTree()
+		n  = AVLTree([2,3,1])
 		c  = 0
-		ins = []
-		while c < 1000:
+		while n.size() < 20:
 			c += 1
-			num = np.random.randint(100)
-			ins.append(num)
-			n.insert(num)
-		print n.root.is_balanced()
+			n.insert(n.size()+1)
+			print n.size()
+			if c == 200:
+				print "breaking"
+				break
 
-		for num in ins:
-			n.delete(num)
-			print n.is_balanced()
+		print n.size()
+		print [(i.key,i.size) for i in n.inOrder()]
 
-	if not test_AVL:
+
+
+
+
+
+	test_binary = False
+	if test_binary:
 		b = binaryNode(5)
 		c = 0 
 		while c < 100:

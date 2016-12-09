@@ -1,16 +1,16 @@
 class element(object):
 	def __init__(self,value):
-		self.value = value
-		self.parent = None
-		self.left = None
-		self.right = None
+		self.value 		= value
+		self.parent 	= None
+		self.left 		= None
+		self.right 		= None
 	
 	def children(self):
 		children = {}
 		if self.left:
-			children['left'] = self.left
+			children['left'] 	= self.left
 		if self.right:
-			children['right'] = self.right
+			children['right'] 	= self.right
 		return children
 
 class heap(object):
