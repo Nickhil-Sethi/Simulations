@@ -7,6 +7,7 @@ class element(object):
 		self.children 	= set()
 
 	def items(self):
+		# implementation of BFS
 		items	= []
 		queue 	= deque()
 		queue.appendleft(self)
@@ -67,12 +68,10 @@ if __name__=='__main__':
 	import numpy as np
 	import string
 	L			= list(string.letters)
-
 	A 			= DisjointSet('A')
 	elements 	= range(10)
 	for i in elements:
 		A.insert(element(i))
-		
 	B			= DisjointSet('B')
 	for i in xrange(10):
 		B.insert(element(np.random.choice(L)))

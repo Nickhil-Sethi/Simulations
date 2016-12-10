@@ -10,20 +10,12 @@ class binaryNode(object):
 		self.size 			= 1
 
 	def min_right(self):
-		parent 				= None
 		prev 				= self
 		current 			= self.right
 		while current:
-			parent 			= prev
 			prev 			= current
 			current 		= current.left
-		return prev, parent
-	
-	def get_size(self):
-		ls = 0 if not self.left else self.left.size
-		lr = 0 if not self.right else self.right.size
-		self.size = 1 + ls + lr
-		return self.size
+		return prev
 
 	def is_right(self):
 		return (self.parent != None and self.parent.key < self.key)
@@ -126,7 +118,8 @@ class binaryNode(object):
 				del node
 				return
 			if node.right and node.left:
-				minRight, Rparent = node.min_right()
+				minRight = node.min_right()
+				Rparent  = minRight.parent
 				if minRight == node.right:
 					if parent.key < node.key:
 						parent.set_right(minRight)
@@ -159,63 +152,40 @@ class binaryNode(object):
 	def __repr__(self):
 		return "key {}".format(self.key,self.value)
 
-
-
-
-
 """ AVLnode class """
 class AVLnode(binaryNode):
 	def __init__(self,key,value=None):
 		binaryNode.__init__(self,key,value)
+		self.balance_factor = 0
 		self.height         = 1
+		self.size 			= 1
 	
-	def is_balanced(self):
-		if -2 < self.balance_factor() < 2:
-			if self.left and self.right:
-				return self.left.is_balanced() and self.right.is_balanced()
-			elif self.left:
-				return self.left.is_balanced()
-			elif self.right:
-				return self.right.is_balanced()
-			else:
-				return True
-		return False
+	def adjust_balance_factor(self):
+		left_height 		= self.left.height if self.left else 0
+		right_height 		= self.right.height if self.right else 0
+		self.balance_factor = right_height - left_height
+		return self.balance_factor
 
-	def balance_factor(self):
-		lh = 0
-		if self.left:
-			lh = self.left.height
-		rh = 0
-		if self.right:
-			rh = self.right.height
-		return rh - lh
+	def adjust_height(self):
+		left_height 		= self.left.height if self.left else 0
+		right_height 		= self.right.height if self.right else 0
+		self.height 		= 1 + max(left_height,right_height)
+		return self.height
 
-	def get_height(self):
-		if not self.left and not self.right:
-			self.height = 1
-			return 1
-		else:
-			l_height = 0
-			if self.left:
-				l_height = self.left.height
-			
-			r_height = 0
-			if self.right:
-				r_height = self.right.height
-
-			self.height  = 1 + max(l_height,r_height)
-			return self.height
-
+	def adjust_size(self):
+		left_size 			= self.left.size if self.left else 0
+		right_size 			= self.right.size if self.right else 0
+		self.size 			= 1 + left_size + right_size
+		return self.size 
+	
 	def rotate_left(self):
 		if not self.right:
-			return
-		P 				= self.parent
-		R 				= self.right
+			raise Exception('right not present; {} only has {}'.format(self.key,self.inOrder()))
 
-		self.right  	= R.left
-		if R.left:
-			R.left.parent 	= self	
-		
+		P 					= self.parent
+		R 					= self.right
+
+		self.set_right(R.left)
 		R.set_left(self)
 
 		if P and P.key < self.key:
@@ -224,25 +194,31 @@ class AVLnode(binaryNode):
 			P.set_left(R)
 		else:
 			R.parent = None
-		
-		self.get_height()
-		self.get_size()
-		R.get_height()
-		R.get_size()
+
+		self.adjust_size()
+		self.adjust_height()
+		self.adjust_balance_factor()
+
+		R.adjust_size()
+		R.adjust_height()
+		R.adjust_balance_factor()
+
+		if P:
+			P.adjust_size()
+			P.adjust_height()
+			P.adjust_balance_factor()
+
 		return R
 
 	def rotate_right(self):
 		if not self.left:
-			return
-		P 				= self.parent
-		L 				= self.left
+			raise Exception('left not present; only has {}'.format(self.inOrder()))
+		P 					= self.parent
+		L 					= self.left
 
-		self.left 		= L.right
-		if L.right:
-			L.right.parent 	= self
-		
+		self.set_left(L.right)
 		L.set_right(self)
-		
+
 		if P and P.key < self.key:
 			P.set_right(L)
 		elif P:
@@ -250,25 +226,33 @@ class AVLnode(binaryNode):
 		else:
 			L.parent = None
 
-		self.get_height()
-		self.get_size()
-		L.get_height()
-		L.get_size()
+		self.adjust_size()
+		self.adjust_height()
+		self.adjust_balance_factor()
+
+		L.adjust_size()
+		L.adjust_height()
+		L.adjust_balance_factor()
+
+		if P:
+			P.adjust_size()
+			P.adjust_height()
+			P.adjust_balance_factor()
+
 		return L
 
 	def insert(self,key,value=None):
-
 		newNode = AVLnode(key,value)
 		stack   = []
+		prev 	= None
 		current = self
-		prev    = None
 
 		while current:
 			if current.key == key:
 				current.value = value
 				return
 			stack.append(current)
-			prev    	= current
+			prev 	= current
 			if current.key < key:
 				current = current.right
 			else:
@@ -278,231 +262,153 @@ class AVLnode(binaryNode):
 			prev.set_right(newNode)
 		else:
 			prev.set_left(newNode)
-		stack.append(newNode)
 
-		# rebalancing tree
+		stack.append(newNode)
 		newRoot = None
 		while stack:
-			current 		= stack.pop()
-			current.get_height()
-			current.get_size()
-			if current.balance_factor() > 1:
-				if not current.balance_factor() == 2:
-					raise ValueError('{} balance factor == {}; trying to insert {}'.format(current,current.balance_factor(),newNode))
+			current = stack.pop()
+			current.adjust_size()
+			current.adjust_height()
+			if current.adjust_balance_factor() > 1:
+				assert current.balance_factor == 2
 				if current.right.right and key in current.right.right:
-					current 					 = current.rotate_left()
+					current 		= current.rotate_left()
 				else:
-					current.right 				 = current.right.rotate_right()
-					current      				 = current.rotate_left()
+					current.right 	= current.right.rotate_right()
+					current		  	= current.rotate_left()
 				if not current.parent:
 					newRoot = current
-				break
-			elif current.balance_factor() < -1:
-				if not current.balance_factor() == -2:
-					raise ValueError('{} balance factor == {}; trying to insert {}'.format(current,current.balance_factor(),newNode))
+			elif current.adjust_balance_factor() < -1:
+				assert current.balance_factor == -2
 				if current.left.left and key in current.left.left:
-					current 					 = current.rotate_right()
+					current			= current.rotate_right()
 				else:
-					current.left 				 = current.left.rotate_left()
-					current						 = current.rotate_right()
+					current.left 	= current.left.rotate_left()
+					print current.left
+					current			= current.rotate_right()
 				if not current.parent:
 					newRoot = current
-				break
-		
-		# adjust balance_factors for other nodes
-		while stack:
-			current = stack.pop() 
-			current.get_height()
-			current.get_size()
-
 		return newRoot
 
 	def delete(self,key):
-		node  = self.search(key)
-		if node != None and node != self:
-			Found = True
+		node = self.search(key)
+		if node and node is self:
+			parent = node.parent
 			if not node.left and not node.right:
 				if node.is_right():
-					node.parent.right = None
+					parent.right = None
 				else:
-					node.parent.left  = None
-
-				current = node.parent
-				while current:
-					current.get_height()
-					current = current.parent
-				
+					parent.left  = None
 				del node
-				self.size -= 1
+				
+				current = parent
+				while current:
+					current.adjust_size()
+					current.adjust_height()
+					current.adjust_balance_factor()
+					current = current.parent
 				return
 			if node.left and not node.right:
 				if node.is_right():
-					node.parent.set_right(node.left)
+					parent.set_right(node.left)
 				else:
-					node.parent.set_left(node.left)
+					parent.set_left(node.left)
 
-				current 	= node.parent
+				current = parent 
 				while current:
-					current.get_height()
+					current.adjust_size()
+					current.adjust_height()
+					current.adjust_balance_factor()
 					current = current.parent
-
-				del node
-				self.size -= 1
 				return
+
 			if node.right and not node.left:
 				if node.is_right():
-					node.parent.set_right(node.right)
+					parent.set_right(node.right)
 				else:
-					node.parent.set_left(node.right)
+					parent.set_left(node.right)
 
-				current 	= node.parent
+				current = parent
 				while current:
-					current.get_height()
+					current.adjust_size()
+					current.adjust_height()
+					current.adjust_balance_factor()
 					current = current.parent
-
-				del node
-				self.size -= 1
 				return
-			if node.right and node.left:
-				minRight, Rparent = node.min_right()
-				if node.right == minRight:
+			if node.left and node.right:
+				minRight = node.min_right()
+				rParent  = minRight.Parent
+				if minRight is node.right:
+					minRight.set_left(node.left)
 					if node.is_right():
-						node.parent.set_right(node.right)
+						parent.set_right(minRight)
 					else:
-						node.parent.set_left(node.right)
-					node.right.set_left(node.left)
-					current = node.right
-					while current:
-						current.get_height()
-						current = current.parent
-					del node
-					self.size -= 1
-					return
+						parent.set_left(minRight)
 				else:
 					if minRight.right:
-						minRight.parent.set_left(minRight.right)
+						rParent.set_left(minRight.right)
 					else:
-						minRight.parent.left = None
-					if node.is_right():
-						node.parent.set_right(minRight)
-					else:
-						node.parent.set_left(minRight)
+						rParent.left 	= None
 					minRight.set_left(node.left)
 					minRight.set_right(node.right)
+					if node.is_right():
+						parent.set_right(minRight)
+					else:
+						parent.set_left(minRight)
 
-					current = node.parent
+					current = rParent
 					while current:
-						current.get_height()
+						current.adjust_size()
+						current.adjust_height()
+						current.adjust_balance_factor()
 						current = current.parent
-					del node
-					self.size -= 1
-					return
+
+					return 
 
 class AVLTree(object):
-	def __init__(self,values=None):
+	def __init__(self):
 		self.root = None
-		if values:
-			assert type(values) is list
-			for value in values:
-				if type(value) is list and len(value) == 2:
-					self.insert(value[0],value[1])
-				if type(value) in [int,float,str]:
-					self.insert(value)
-	
-	def size(self):
-		if not self.root:
-			return 0
-		return self.root.size
-		
+
 	def insert(self,key,value=None):
 		if not self.root:
 			self.root = AVLnode(key,value)
 		else:
-			v = self.root.insert(key,value)
-			if v:
-				self.root = v
+			newRoot = self.root.insert(key,value)
+			if newRoot:
+				self.root = newRoot
+
+	def size(self):
+		return self.root.size if self.root else 0
 
 	def delete(self,key):
-		if self.root and key != self.root.key:
+		if key != self.root.key:
 			self.root.delete(key)
-		elif self.root:
-			if not self.root.left and not self.root.right:
-				self.root = None
-				self.size = 0
-				return
-			if self.root.left and not self.root.right:
-				old_root 			= self.root
-				self.root 			= self.root.left
-				self.root.parent 	= None
-				del old_root
-				self.size 			-= 1
-				return
-			if self.root.right and not self.root.left:
-				old_root 			= self.root
-				self.root 			= self.root.right
-				self.root.parent 	= None
-				del old_root
-				self.size 			-= 1
-				return
-			if self.root.left and self.root.right:
-				old_root			= self.root
-				minRight 			= self.root.right.min_right()
-				if minRight == self.root.right:
-					minRight.set_left(self.root.left)
-				else:
-					if minRight.right:
-						minRight.parent.set_left(minRight.right)
-					else:
-						minRight.parent.left = None
-					minRight.set_right(node.right)
-					minRight.set_left(node.left)
-				self.root = minRight
-				self.root.parent = None
-				del old_root
-				self.size 			-= 1
-				return
-
-	
-	def search(self,key):
-		if self.root:
-			return self.root.search(key)
 		else:
-			return None
-	
+			pass
+
 	def inOrder(self):
 		if not self.root:
 			return []
 		else:
 			return self.root.inOrder()
 
-	def is_balanced(self):
-		if self.root:
-			return self.root.is_balanced()
-		return True
+	def __iter__(self):
+		items = self.inOrder()
+		for item in items:
+			yield item
 
 if __name__=='__main__':
-
+	import time
 	import numpy as np
 
 	test_AVL = True
 	if test_AVL:
-		n  = AVLTree([2,3,1])
-		c  = 0
-		while n.size() < 20:
+		v = AVLTree()
+		c = 0
+		while v.size() < 100 and c < 100:
+			v.insert(np.random.randint(10000))
 			c += 1
-			n.insert(n.size()+1)
-			print n.size()
-			if c == 200:
-				print "breaking"
-				break
-
-		print n.size()
-		print [(i.key,i.size) for i in n.inOrder()]
-
-
-
-
-
+		print v.inOrder()
 
 	test_binary = False
 	if test_binary:

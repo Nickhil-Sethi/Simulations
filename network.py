@@ -33,15 +33,15 @@ class DirectedGraph(object):
     def connect(self,i,j):
         self.nodes[i].connect(self.nodes[j])
 
-    def DFS(self,s):
-        stack = deque([self.nodes[s]])
-        while stack:
-            current = stack.pop()
+    def BFS(self,s):
+        queue = deque([self.nodes[s]])
+        while queue:
+            current = queue.pop()
             if current.color == 'Black':
                 print "recoloring {}".format(current)
                 current.color = 'Red'
                 for node in current.adjacency_set:
-                    stack.appendleft(node[0])
+                    queue.appendleft(node[0])
 
 
 if __name__=='__main__':
@@ -54,7 +54,7 @@ if __name__=='__main__':
     G.connect(4,8)
     G.connect(8,9)
 
-    G.DFS(0)
+    G.BFS(0)
     a = G.nodes[0]
     for i in a.adjacency_set:
         print i
