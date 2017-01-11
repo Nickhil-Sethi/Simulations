@@ -284,7 +284,6 @@ class AVLnode(binaryNode):
 					current			= current.rotate_right()
 				else:
 					current.left 	= current.left.rotate_left()
-					print current.left
 					current			= current.rotate_right()
 				if not current.parent:
 					newRoot = current
@@ -380,10 +379,17 @@ class AVLTree(object):
 	def size(self):
 		return self.root.size if self.root else 0
 
+	def search(self,key):
+		if not self.root:
+			return None
+		else:
+			return self.root.search(key)
+
 	def delete(self,key):
 		if key != self.root.key:
 			self.root.delete(key)
 		else:
+			# TODO : delete root case
 			pass
 
 	def inOrder(self):
@@ -406,7 +412,7 @@ if __name__=='__main__':
 		v = AVLTree()
 		c = 0
 		while v.size() < 100 and c < 100:
-			v.insert(np.random.randint(10000))
+			v.insert(np.random.randint(100))
 			c += 1
 		print v.inOrder()
 
