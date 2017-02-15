@@ -3,37 +3,26 @@
 @author: Nickhil_Sethi
 
 SIR simulation on network
-
 """
-#from graph_tool.all import *
-import numpy as np
-from network import *
+
 import queue
+import numpy as np
+
+from network import *
 
 def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_raw=1.0,beta_raw=1.0):
 
-    # sanity checks
-    graphs = ['random','scale free','small world']
+    assert graph in ['random','scale free','small world']
+    assert 0. <= delta <= 1.
+    assert 0. <= w <= 1.
+    assert 0. <= p <= 1.
 
-    if not graph in graphs:
-        raise ValueError('graph must be type [random, scale free, small world]')
-
-    if not 0 <= delta <= 1:
-        raise ValueError('delta must be in [0,1]')
-    if not 0 <= w <= 1:
-        raise ValueError('w must be in [0,1]')
-    if not 0 <= p <= 1:
-        raise ValueError('p must be in [0,1]')
-
-    alpha = alpha_raw*dt 
-    beta = beta_raw*dt
-    
-    state=[0 for i in xrange(N)]
-    state[0]=1
+    alpha    = alpha_raw*dt 
+    beta     = beta_raw*dt
+    state    = [0 for i in xrange(N)]
+    state[0] = 1
 
     print "     constructing graph..."
-
-    # constructing network
     if graph == 'random':
         G = random_graph(node_map=state,delta=delta)
         adj = G.construct()
@@ -47,7 +36,6 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
     # infected node becomes 'removed' node with probability 'beta_raw' in one unit of time
 
     print "     simulating disease spread"
-
     # 'active' queue manages infected nodes
     active = queue.queue()
     active.enqueue(0)
@@ -70,9 +58,7 @@ def simulation(N=100,time=100,graph='random',delta=.1, w=.5,p=.5,dt=.01,alpha_ra
             state[v] = 2
         else:
             active.enqueue(v)
-
         timer += 1
-        
     return state
 
 if __name__ == '__main__':
