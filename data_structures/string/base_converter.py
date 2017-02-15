@@ -1,15 +1,12 @@
 import queue
 
 def base_converter(num,base):
-
 	if not isinstance(num,__builtins__.int):
 		raise TypeError('must input type int')
-
 	if not (2 <= base <= 16):
 		raise ValueError('base must be between 2 and 16, inclusive')
 	
 	chars='0123456789ABCDEFG'
-	
 	if num < base:
 		return chars[num]
 	else:
@@ -52,8 +49,8 @@ def recursive_max(num_list):
 		return max(num_list[0],recursive_max(num_list[1:l]))
 
 def flatten_list(input):
-	q=queue.queue()
-	counter=0
+	q       = queue.queue()
+	counter = 0
 	while counter < len(input):
 		if not isinstance(input[counter],__builtins__.list):
 			q.enqueue(input[counter])
@@ -62,7 +59,7 @@ def flatten_list(input):
 			for i in sub_list:
 				q.enqueue(i)
 		counter +=1 
-
+	
 	new_list = []
 	while not q.is_empty():
 		new_list.append(q.dequeue())

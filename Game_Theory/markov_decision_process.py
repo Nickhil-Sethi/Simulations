@@ -1,37 +1,38 @@
 import sys
 sys.path.insert(0,'/Library/Python/2.7/site-packages')
+
 import numpy as np
 
 # parameters
-cost_sick = 2.1
+cost_sick     = 2.1
 cost_medicine = 2.2
 
 # number of states, number of actions
-num_states = 2
-num_actions = 2
+num_states    = 2
+num_actions   = 2
 
 # states and actions 
-states=range(num_states)
-actions=range(num_actions)
+states        = range(num_states)
+actions       = range(num_actions)
 
 # transition matrices
-p = np.zeros( (num_actions,num_states,num_states) )
+p = np.zeros((num_actions,num_states,num_states))
 
-p[0][0][0] = .9
-p[0][0][1] = .1
+p[0][0][0]    = .9
+p[0][0][1]    = .1
 
-p[0][1][0] = .1
-p[0][1][1] = .9
+p[0][1][0]    = .1
+p[0][1][1]    = .9
 
-p[1][0][0] = .1
-p[1][0][1] = .9
+p[1][0][0]    = .1
+p[1][0][1]    = .9
 
-p[1][1][0] = .6
-p[1][1][1] = .4
+p[1][1][0]    = .6
+p[1][1][1]    = .4
 
-beta = .9
-V = []
-A = []
+beta          = .9
+V             = []
+A             = []
 
 print p[0]
 print p[1]
@@ -50,9 +51,7 @@ def R(a,s):
 
 # iterate bellman equation
 def iterate_bellman_equation(eps):
-	
 	diff = np.inf
-
 	# initializing base case
 	a0 = np.zeros( (num_actions,num_states,1) )
 	for a in actions:

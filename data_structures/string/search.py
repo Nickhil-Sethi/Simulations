@@ -8,16 +8,14 @@ def linear_search(mylist,item):
 
 def binary_search(mylist,item):
 
-	begin=0.
-	end=float(len(mylist)-1)
-	mid = int(np.ceil((begin+end)/2))
-
+	begin      = 0.
+	end        = float(len(mylist)-1)
+	mid        = int(np.ceil((begin+end)/2))
 	keep_going = True
 	while keep_going:
 
 		if end - mid < 1:
 			keep_going = False
-
 		if mylist[mid] == item:
 			return mid
 		elif mylist[mid] < item:

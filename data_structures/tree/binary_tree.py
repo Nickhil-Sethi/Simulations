@@ -1,4 +1,4 @@
-""" binaryNode class """
+"""Implementation of a binaryNode, AVLNode, and AVLTree objects"""
 
 class binaryNode(object):
 	def __init__(self,key,value=None):
@@ -52,6 +52,7 @@ class binaryNode(object):
 			prev.set_right(newNode)
 		else:
 			prev.set_left(newNode)
+		self.size += 1
 
 	def search(self,key):
 		prev    = None
@@ -93,6 +94,7 @@ class binaryNode(object):
 	def delete(self,key):
 		node = self.search(key)
 		if node != None and node != self:
+			self.size -= 1
 			parent = node.parent
 			if not node.left and not node.right:
 				if parent.key < node.key:
@@ -152,7 +154,6 @@ class binaryNode(object):
 	def __repr__(self):
 		return "key {}".format(self.key,self.value)
 
-""" AVLnode class """
 class AVLnode(binaryNode):
 	def __init__(self,key,value=None):
 		binaryNode.__init__(self,key,value)
@@ -404,24 +405,31 @@ class AVLTree(object):
 			yield item
 
 if __name__=='__main__':
-	import time
+
 	import numpy as np
 
-	test_AVL = True
+	test_AVL = False
 	if test_AVL:
+
+		size = 100
+		print "testing AVLTree object; generating random tree of size %d \n" % size 
+		
 		v = AVLTree()
-		c = 0
-		while v.size() < 100 and c < 100:
+		while v.size() < size :
 			v.insert(np.random.randint(100))
-			c += 1
+
+		print "printing keys inOrder"
 		print v.inOrder()
 
-	test_binary = False
+	test_binary = True
 	if test_binary:
+		sz = 100
+		
+		print "testing binaryNode object; inserting %d random nodes\n" % sz 
 		b = binaryNode(5)
-		c = 0 
-		while c < 100:
-			c += 1
-			num = np.random.randint(100)
+		while b.size < sz:
+			num = np.random.randint(400)
 			b.insert(num)
-			print [i.key for i in b.inOrder()]
+
+		print "printing node keys inOrder"
+		print [i.key for i in b.inOrder()]
