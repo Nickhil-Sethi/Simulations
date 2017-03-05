@@ -10,7 +10,7 @@ class binaryNode(object):
 		self.size 			= 1
 
 	def min_right(self):
-		prev 				= self
+		prev 				= None
 		current 			= self.right
 		while current:
 			prev 			= current
@@ -47,7 +47,6 @@ class binaryNode(object):
 				current 	= current.right
 			else:
 				current 	= current.left
-
 		if prev.key < key:
 			prev.set_right(newNode)
 		else:
@@ -136,15 +135,12 @@ class binaryNode(object):
 						minRight.right  = None
 					else:
 						Rparent.left    = None
-
 					if parent.key < node.key:
 						parent.set_right(minRight)
 					else:
 						parent.set_left(minRight)
-					
 					minRight.set_left(node.left)
 					minRight.set_right(node.right)
-
 				del node
 				return
 
@@ -371,27 +367,38 @@ class AVLTree(object):
 
 	def insert(self,key,value=None):
 		if not self.root:
-			self.root = AVLnode(key,value)
+			self.root     				= AVLnode(key,value)
 		else:
-			newRoot = self.root.insert(key,value)
+			newRoot       				= self.root.insert(key,value)
 			if newRoot:
-				self.root = newRoot
+				self.root 				= newRoot
 
 	def size(self):
 		return self.root.size if self.root else 0
 
 	def search(self,key):
-		if not self.root:
-			return None
-		else:
-			return self.root.search(key)
+		if self.root:
+			found = self.root.search(key)
+			if found:
+				return found
+		raise KeyError('key {} not in AVLTree'.format(key))
 
 	def delete(self,key):
-		if key != self.root.key:
+		if self.root and key != self.root.key:
 			self.root.delete(key)
+		elif self.root:
+			newRoot 	        		= self.root.min_right()
+			if (not newRoot) and self.root.left:
+				self.root 				= self.root.left
+				self.root.parent 		= None
+			elif newRoot:
+				newRoot.parent.left 	= None
+				newRoot.parent      	= None
+			else:
+				self.root 				= None
 		else:
-			# TODO : delete root case
-			pass
+			raise KeyError('key {} not in AVLTree'.format(key))
+
 
 	def inOrder(self):
 		if not self.root:
@@ -408,20 +415,16 @@ if __name__=='__main__':
 
 	import numpy as np
 
-	test_AVL = False
+	test_AVL = True
 	if test_AVL:
+		T = AVLTree()
+		T.insert(5)
+		T.insert(4)
+		print T.inOrder()
+		T.delete(5)
+		print T.inOrder()
 
-		size = 100
-		print "testing AVLTree object; generating random tree of size %d \n" % size 
-		
-		v = AVLTree()
-		while v.size() < size :
-			v.insert(np.random.randint(100))
-
-		print "printing keys inOrder"
-		print v.inOrder()
-
-	test_binary = True
+	test_binary = False
 	if test_binary:
 		sz = 100
 		
