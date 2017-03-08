@@ -25,9 +25,9 @@ def selection_sort(arr):
 			if arr[j] > m:
 				m     = arr[j]
 				arg_m = j 
-		temp = arr[i-1]
-		arr[i-1] = m
-		arr[arg_m] = arr[i-1]
+		temp 		= arr[i-1]
+		arr[i-1] 	= m
+		arr[arg_m] 	= temp
 
 	return arr
 
@@ -155,12 +155,13 @@ def MergeRecursive(lists):
 	return Merge([L,R])
 
 def partition(arr,left,right):
-	partition = arr[(left+right)//2]
+	partition 		 			  = arr[(left+right)//2]
 	while left <= right:
 		while arr[left] < partition:
-			left+=1
+			left				 +=1
 		while arr[right] > partition:
-			right-=1
+			right				 -=1
+			
 		if left <= right:
 			arr[right], arr[left] = arr[left], arr[right]
 			left				 +=1
