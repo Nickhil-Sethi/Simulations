@@ -68,8 +68,8 @@ class DirectedGraph(object):
                 S[closest] = (dist,prev)
         return S
 
+    # implements dijkstras with a priority queue
     def Dijsktras_Efficient(self,s):
-        # implements dijkstras with a priority queue
         pq = heapify([(node, self.weight(s,node) if node in s.adjacency_set else float("infinity")) for node in self.nodes])
         while pq:
             u = pq.heappop()
@@ -77,6 +77,10 @@ class DirectedGraph(object):
                 if dist[v] > dist[u] + self.weight(u,v):
                     dist[v] = dist[u] + self.weight(u,v)
                     heapq.heappush(pq,v)
+
+    def Bellman_Ford(self,s,t):
+        pass
+
 
 if __name__=='__main__':
     G = DirectedGraph(100)

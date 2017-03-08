@@ -62,7 +62,6 @@ def shell_sort(arr):
 			gap_insertion_sort(arr,position,sublist_count)
 		k+=1
 		sublist_count = len(arr)//k
-	
 	return arr
 
 def merge(arr,start,pivot,end):
@@ -117,37 +116,6 @@ def merge_sort(arr,start=None,end=None):
 	
 	return arr
 
-def partition(arr, pivot, low, high):
-
-	# halt when low and high marker meet
-	while low < high: 
-		while arr[low] <= arr[pivot] and low < high and low < len(arr) - 1:
-			low += 1
-		while arr[high] >= arr[pivot] and high > low and high > 1:
-			high -= 1
-		if high > low:
-			# swap low value with high value
-			temp = arr[high]
-			arr[high] = arr[low]
-			arr[low] = temp
-
-	# switch pivot value with high value
-	temp = arr[high]
-	arr[high] = arr[pivot]
-	arr[pivot] = temp
-
-	return high
-
-def quicksort(arr, pivot, low, high):
-
-	if low < high:
-		
-		p = partition(arr, pivot, low, high)
-		print arr
-		quicksort(arr, pivot, low, p-1)
-		quicksort(arr, p, p+1, high)
-	
-	return arr
 
 def heapSort(arr):
 	ret  = []
@@ -183,14 +151,37 @@ def MergeRecursive(lists):
 	list2 = [lists[j] for j in xrange(n,len(lists))]
 	L     = MergeRecursive(list1)
 	R     = MergeRecursive(list2)
+
 	return Merge([L,R])
-	
+
+def partition(arr,left,right):
+	partition = arr[(left+right)//2]
+	while left <= right:
+		while arr[left] < partition:
+			left+=1
+		while arr[right] > partition:
+			right-=1
+		if left <= right:
+			arr[right], arr[left] = arr[left], arr[right]
+			left				 +=1
+			right				 -=1
+	return left
+
+def quickSort(arr,left,right):
+	if left < right:
+		p 	= partition(arr,left,right)
+		arr = quickSort(arr,left,p-1)
+		arr = quickSort(arr,p,right)
+	return arr
+
 if __name__=='__main__':
 
 	import numpy as np
 
 	L = 10
-	A = [[np.random.randint(L) for i in xrange(L)] for i in xrange(3)]
-	B = MergeRecursive(A)
-	print B
-	
+	S = 14
+	for i in xrange(1000):
+		A = [np.random.randint(L) for i in xrange(S)]
+		A = quickSort(A,0,S-1)
+		if not is_sorted(A):
+			raise Exception('NOT SORTED')

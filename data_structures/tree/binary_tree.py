@@ -1,52 +1,57 @@
-"""Implementation of a binaryNode, AVLNode, and AVLTree objects"""
-
+"""Implements binary search tree object for unique keys"""
 class binaryNode(object):
 	def __init__(self,key,value=None):
-		self.key 			= key
-		self.value 			= value
-		self.left 			= None
-		self.right 			= None
-		self.parent			= None
-		self.size 			= 1
+		self.key 					= key
+		self.value 					= value
+		self.left 					= None
+		self.right 					= None
+		self.parent					= None
+		self.size 					= 1
 
 	def min_right(self):
-		prev 				= None
-		current 			= self.right
+		prev 						= None
+		current 					= self.right
 		while current:
-			prev 			= current
-			current 		= current.left
+			prev 					= current
+			current 				= current.left
 		return prev
 
 	def is_right(self):
-		return (self.parent != None and self.parent.key < self.key)
+		return (self.parent is not None and self.parent.key < self.key)
 
 	def set_left(self,node):
 		if node is None:
-			self.left = None
+			if self.left is not None:
+				self.left.parent 	= None
+			self.left 				= None
 			return
-		self.left 			= node
-		node.parent 		= self
+		self.left 					= node
+		node.parent 				= self
 
 	def set_right(self,node):
 		if node is None:
-			self.right = None
+			if self.right is not None:
+				self.right.parent 	= None
+			self.right 				= None
 			return
-		self.right  		= node
-		node.parent 		= self
+		self.right  				= node
+		node.parent 				= self
 
 	def insert(self,key,value=None):
-
-		newNode 			= binaryNode(key,value)
-		current 			= self
+		if key is None:
+			newNode 				= None
+		else:
+			newNode 				= binaryNode(key,value)
+		current 					= self
 		while current:
 			if current.key == key:
-				current.value = value
+				current.value 		= value
 				return
-			prev 			= current
+			prev 					= current
 			if current.key < key:
-				current 	= current.right
+				current 			= current.right
 			else:
-				current 	= current.left
+				current 			= current.left
 		if prev.key < key:
 			prev.set_right(newNode)
 		else:
@@ -54,16 +59,16 @@ class binaryNode(object):
 		self.size += 1
 
 	def search(self,key):
-		prev    = None
-		current = self
+		prev    					= None
+		current 					= self
 		while current:
 			if current.key == key:
 				return current
-			prev = current
+			prev 					= current
 			if current.key < key:
-				current 	= current.right
+				current 			= current.right
 			else:
-				current		= current.left
+				current				= current.left
 		return current
 
 	def isSorted(self,arr):
@@ -73,9 +78,9 @@ class binaryNode(object):
 		return True
 
 	def inOrder(self):
-		stack 				= [self]
-		ret   				= []
-		current 			= self
+		stack 						= [self]
+		ret   						= []
+		current 					= self
 		while stack:
 			if current.left:
 				current 	= current.left
@@ -91,33 +96,27 @@ class binaryNode(object):
 		return ret
 
 	def delete(self,key):
-		node = self.search(key)
+		node 							= self.search(key)
 		if node != None and node != self:
 			self.size -= 1
 			parent = node.parent
 			if not node.left and not node.right:
 				if parent.key < node.key:
-					parent.right = None
+					parent.right 		= None
 				else:
-					parent.left  = None
-				del node
-				return
+					parent.left  		= None
 			if node.left and not node.right:
 				if parent.key < node.key:
 					parent.set_right(node.left)
 				else:
 					parent.set_left(node.left)
-				node.left        = None
-				del node
-				return
+				node.left        		= None
 			if node.right and not node.left:
 				if parent.key < node.key:
 					parent.set_right(node.right)
 				else:
 					parent.set_left(node.right)
-				node.right 	     	 = None
-				del node
-				return
+				node.right 	     	 	= None
 			if node.right and node.left:
 				minRight = node.min_right()
 				Rparent  = minRight.parent
@@ -132,17 +131,17 @@ class binaryNode(object):
 				else:
 					if minRight.right:
 						Rparent.set_left(minRight.right)
-						minRight.right  = None
+						minRight.right   = None
 					else:
-						Rparent.left    = None
+						Rparent.left     = None
 					if parent.key < node.key:
 						parent.set_right(minRight)
 					else:
 						parent.set_left(minRight)
 					minRight.set_left(node.left)
 					minRight.set_right(node.right)
-				del node
-				return
+			del node
+			return
 
 	def __contains__(self,key):
 		return (self.search(key) != None)
@@ -190,7 +189,7 @@ class AVLnode(binaryNode):
 		elif P:
 			P.set_left(R)
 		else:
-			R.parent = None
+			R.parent 		= None
 
 		self.adjust_size()
 		self.adjust_height()
@@ -415,7 +414,7 @@ if __name__=='__main__':
 
 	import numpy as np
 
-	test_AVL = True
+	test_AVL = False
 	if test_AVL:
 		T = AVLTree()
 		T.insert(5)
@@ -424,15 +423,8 @@ if __name__=='__main__':
 		T.delete(5)
 		print T.inOrder()
 
-	test_binary = False
+	test_binary = True
 	if test_binary:
-		sz = 100
-		
-		print "testing binaryNode object; inserting %d random nodes\n" % sz 
-		b = binaryNode(5)
-		while b.size < sz:
-			num = np.random.randint(400)
-			b.insert(num)
-
-		print "printing node keys inOrder"
-		print [i.key for i in b.inOrder()]
+		n = binaryNode(5)
+		n.insert(None)
+		print n.inOrder()

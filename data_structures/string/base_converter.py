@@ -6,7 +6,7 @@ def base_converter(num,base):
 	if not (2 <= base <= 16):
 		raise ValueError('base must be between 2 and 16, inclusive')
 	
-	chars='0123456789ABCDEFG'
+	chars = '0123456789ABCDEFG'
 	if num < base:
 		return chars[num]
 	else:
@@ -17,6 +17,7 @@ def base_converter(num,base):
 def check_palindrome(string):
 	if not isinstance(string,__builtins__.str):
 		raise TypeError('must input type string')
+
 	L = len(string)
 	if L == 1:
 		return True
@@ -35,6 +36,7 @@ def recursive_sum(nums):
 		return nums[0]
 	else:
 		return nums[0] + recursive_sum(nums[1:L])
+
 def how_many_digits(num):
 	if num < 10:
 		return 1
