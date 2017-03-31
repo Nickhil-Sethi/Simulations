@@ -414,7 +414,7 @@ if __name__=='__main__':
 
 	import numpy as np
 
-	test_AVL = False
+	test_AVL = True
 	if test_AVL:
 		T = AVLTree()
 		T.insert(5)
@@ -423,7 +423,7 @@ if __name__=='__main__':
 		T.delete(5)
 		print T.inOrder()
 
-	test_binary = True
+	test_binary = False
 	if test_binary:
 		n = binaryNode(5)
 		n.insert(None)

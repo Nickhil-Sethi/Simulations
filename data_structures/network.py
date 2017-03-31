@@ -4,7 +4,7 @@ from tree.heap import MinHeap
 from tree.binary_tree import AVLTree
 
 from collections import OrderedDict, deque
-from heapq import 
+from heapq import heap
 
 class AdjacencySet(AVLTree):
     def __init__(self):
@@ -41,7 +41,7 @@ class DirectedGraph(object):
     def __init__(self,init_size):
         self.nodes         = OrderedDict([(i,Node(i)) for i in xrange(init_size)])
 
-    def connect(self,i,j,weight=None):
+    def connect(self,i,j,weight=1.):
         self.nodes[i].connect(self.nodes[j],weight)
 
     def weight(self,i,j):
@@ -70,9 +70,11 @@ class DirectedGraph(object):
 
     # implements dijkstras with a priority queue
     def Dijsktras_Efficient(self,s):
-        pq = heapify([(node, self.weight(s,node) if node in s.adjacency_set else float("infinity")) for node in self.nodes])
-        while pq:
-            u = pq.heappop()
+        nodes       = OrderedDict([(node, (float("infinity"),None) for node in self.nodes)])
+        nodes[s]    = (0.,None)
+        heapq.heapify(nodes)
+        while nodes:
+            u = heapq.heappop(nodes)
             for v in self.nodes[u].adjacency_set:
                 if dist[v] > dist[u] + self.weight(u,v):
                     dist[v] = dist[u] + self.weight(u,v)
